@@ -1,5 +1,5 @@
 // Cole aqui a URL do seu Apps Script Web App (a que termina com /exec)
-const API_URL = "COLE_AQUI_SUA_URL_DO_APPS_SCRIPT_EXEC";
+const API_URL = "https://script.google.com/macros/s/SEU_ID/exec";
 
 let chart = null;
 
@@ -92,3 +92,4 @@ document.querySelector("#btnFiltrar").addEventListener("click", apply);
 
 setDefaultDateRange();
 apply();
+
