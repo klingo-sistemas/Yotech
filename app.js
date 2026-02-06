@@ -93,3 +93,4 @@ document.querySelector("#btnFiltrar").addEventListener("click", apply);
 setDefaultDateRange();
 apply();
 
+
