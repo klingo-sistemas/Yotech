@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Dashboard Implantações</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body{font-family:Arial, sans-serif; margin:20px;}
+    .grid{display:grid; grid-template-columns: repeat(auto-fit,minmax(260px,1fr)); gap:12px;}
+    .card{border:1px solid #ddd; border-radius:12px; padding:12px;}
+    table{width:100%; border-collapse:collapse;}
+    th,td{border-bottom:1px solid #eee; padding:8px; text-align:left; font-size:14px;}
+    .muted{color:#666; font-size:13px;}
+    input{padding:8px; width:160px;}
+    button{padding:8px 12px; cursor:pointer;}
+  </style>
+</head>
+<body>
+  <h1>Dashboard – Implantações</h1>
+  <p class="muted">Fonte: Google Sheets via Apps Script (API JSON)</p>
+
+  <div class="grid">
+    <div class="card">
+      <h3>Filtro por período (Data de início)</h3>
+      <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+        <label>De: <input id="dtIni" type="date"></label>
+        <label>Até: <input id="dtFim" type="date"></label>
+        <button id="btnFiltrar">Aplicar</button>
+      </div>
+      <p id="resumo" class="muted"></p>
+    </div>
+
+    <div class="card">
+      <h3>Inícios por mês</h3>
+      <canvas id="chartMes"></canvas>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:12px;">
+    <h3>Clientes no período</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Cliente</th>
+          <th>Data de início</th>
+          <th>Previsão de start</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <script src="./app.js"></script>
+</body>
+</html>
