@@ -363,3 +363,4 @@ ui.btnRefresh.addEventListener("click", init);
 ui.btnClear.addEventListener("click", clearFilters);
 
 init();
+
