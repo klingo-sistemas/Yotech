@@ -1,56 +1,631 @@
 <!doctype html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Dashboard Implantações</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <title>YOtech • Dashboard de Implantações</title>
+  <meta name="color-scheme" content="dark" />
   <style>
-    body{font-family:Arial, sans-serif; margin:20px;}
-    .grid{display:grid; grid-template-columns: repeat(auto-fit,minmax(260px,1fr)); gap:12px;}
-    .card{border:1px solid #ddd; border-radius:12px; padding:12px;}
-    table{width:100%; border-collapse:collapse;}
-    th,td{border-bottom:1px solid #eee; padding:8px; text-align:left; font-size:14px;}
-    .muted{color:#666; font-size:13px;}
-    input{padding:8px; width:160px;}
-    button{padding:8px 12px; cursor:pointer;}
+    :root{
+      --bg0:#061a27;
+      --bg1:#082335;
+      --bg2:#0b2f46;
+      --line:#0e3a55;
+      --txt:#e9f3f8;
+      --muted:#a8c1cf;
+      --brand:#15c6c6;
+      --brand2:#0aa0b3;
+      --ok:#22c55e;
+      --warn:#f59e0b;
+      --bad:#ef4444;
+      --card:rgba(255,255,255,.06);
+      --card2:rgba(255,255,255,.08);
+      --shadow: 0 18px 60px rgba(0,0,0,.35);
+      --radius: 18px;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Helvetica Neue", "Noto Sans", "Liberation Sans", sans-serif;
+      color:var(--txt);
+      background:
+        radial-gradient(1000px 700px at 12% 8%, rgba(21,198,198,.14), transparent 60%),
+        radial-gradient(900px 600px at 78% 18%, rgba(10,160,179,.10), transparent 55%),
+        linear-gradient(180deg, var(--bg0), var(--bg1) 40%, #04121c);
+      overflow-x:hidden;
+    }
+
+    .edge{
+      height:8px;
+      background: linear-gradient(90deg, transparent, var(--brand), transparent);
+      opacity:.95;
+      filter: drop-shadow(0 4px 10px rgba(21,198,198,.25));
+    }
+
+    .container{
+      width:min(1120px, 92vw);
+      margin: 24px auto 56px;
+    }
+
+    header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:18px;
+      padding:18px 18px;
+      border:1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border-radius: calc(var(--radius) + 6px);
+      box-shadow: var(--shadow);
+      position: sticky;
+      top: 12px;
+      backdrop-filter: blur(10px);
+      z-index: 5;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:14px;
+      min-width: 240px;
+    }
+
+    .brand img{
+      width:56px;
+      height:56px;
+      object-fit:contain;
+      border-radius:14px;
+      background: rgba(0,0,0,.15);
+      border: 1px solid rgba(21,198,198,.22);
+      box-shadow: 0 10px 30px rgba(0,0,0,.25);
+    }
+
+    .brand .t{
+      display:flex;
+      flex-direction:column;
+      line-height:1.1;
+    }
+
+    .brand .t strong{
+      font-size: 18px;
+      letter-spacing:.5px;
+    }
+    .brand .t span{
+      color:var(--muted);
+      font-size: 12px;
+    }
+
+    .actions{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+
+    .btn{
+      appearance:none;
+      border:1px solid rgba(21,198,198,.35);
+      background: linear-gradient(180deg, rgba(21,198,198,.18), rgba(10,160,179,.12));
+      color:var(--txt);
+      padding:10px 12px;
+      border-radius: 12px;
+      cursor:pointer;
+      transition: transform .12s ease, border-color .12s ease, background .12s ease;
+      font-weight: 650;
+      letter-spacing:.2px;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+    }
+    .btn:hover{ transform: translateY(-1px); border-color: rgba(21,198,198,.6); }
+    .btn:active{ transform: translateY(0px); }
+    .btn.secondary{
+      border-color: rgba(255,255,255,.18);
+      background: rgba(255,255,255,.06);
+      font-weight: 600;
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 12px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color: var(--muted);
+      font-size: 12px;
+      white-space:nowrap;
+    }
+    .dot{
+      width:8px;height:8px;border-radius:999px;
+      background: var(--brand);
+      box-shadow: 0 0 0 6px rgba(21,198,198,.12);
+    }
+
+    main{
+      margin-top:18px;
+      display:grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap:16px;
+    }
+
+    @media (max-width: 980px){
+      main{ grid-template-columns: 1fr; }
+      header{ position:relative; top:auto; }
+    }
+
+    .card{
+      border:1px solid var(--line);
+      background: linear-gradient(180deg, var(--card2), var(--card));
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding:16px;
+      overflow:hidden;
+      position:relative;
+    }
+
+    .card::before{
+      content:"";
+      position:absolute;
+      inset:-2px -2px auto -2px;
+      height:2px;
+      background: linear-gradient(90deg, transparent, rgba(21,198,198,.7), transparent);
+      opacity:.9;
+    }
+
+    .card h2{
+      margin:0 0 10px;
+      font-size: 16px;
+      letter-spacing:.3px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    .sub{
+      margin:0 0 14px;
+      color:var(--muted);
+      font-size: 13px;
+      line-height:1.35;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:12px;
+    }
+    @media (max-width: 520px){
+      .grid{ grid-template-columns: 1fr; }
+    }
+
+    .field{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+    label{
+      font-size: 12px;
+      color: var(--muted);
+    }
+    input, select{
+      width:100%;
+      padding:11px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.16);
+      background: rgba(0,0,0,.22);
+      color: var(--txt);
+      outline:none;
+      transition: border-color .12s ease, box-shadow .12s ease;
+    }
+    input:focus, select:focus{
+      border-color: rgba(21,198,198,.6);
+      box-shadow: 0 0 0 6px rgba(21,198,198,.12);
+    }
+
+    .row{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+
+    .kpis{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:12px;
+      margin-top:10px;
+    }
+
+    .kpi{
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.18);
+      border-radius: 14px;
+      padding:12px;
+    }
+    .kpi .n{
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: .2px;
+    }
+    .kpi .l{
+      color: var(--muted);
+      font-size: 12px;
+      margin-top:2px;
+    }
+
+    table{
+      width:100%;
+      border-collapse: collapse;
+      overflow:hidden;
+      border-radius: 14px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.12);
+    }
+    th, td{
+      padding:12px 10px;
+      text-align:left;
+      font-size: 13px;
+      border-bottom:1px solid rgba(255,255,255,.08);
+    }
+    th{
+      color: var(--muted);
+      font-weight: 700;
+      font-size: 12px;
+      letter-spacing:.2px;
+      background: rgba(255,255,255,.04);
+    }
+    tr:hover td{ background: rgba(21,198,198,.06); }
+    .tag{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid rgba(21,198,198,.28);
+      background: rgba(21,198,198,.10);
+      color: var(--txt);
+      font-size: 12px;
+      white-space:nowrap;
+    }
+
+    .footer{
+      margin-top:14px;
+      color: rgba(168,193,207,.85);
+      font-size: 12px;
+      text-align:center;
+    }
+
+    .toast{
+      margin-top:12px;
+      padding:10px 12px;
+      border-radius: 12px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.18);
+      color: var(--muted);
+      display:none;
+    }
+    .toast.ok{ border-color: rgba(34,197,94,.35); color: rgba(180,255,210,.92); }
+    .toast.bad{ border-color: rgba(239,68,68,.35); color: rgba(255,200,200,.92); }
   </style>
 </head>
+
 <body>
-  <h1>Dashboard – Implantações</h1>
-  <p class="muted">Fonte: Google Sheets via Apps Script (API JSON)</p>
+  <div class="edge"></div>
 
-  <div class="grid">
-    <div class="card">
-      <h3>Filtro por período (Data de início)</h3>
-      <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
-        <label>De: <input id="dtIni" type="date"></label>
-        <label>Até: <input id="dtFim" type="date"></label>
-        <button id="btnFiltrar">Aplicar</button>
+  <div class="container">
+    <header>
+      <div class="brand">
+        <img src="assets/logo-yotech.png" alt="YOtech" />
+        <div class="t">
+          <strong>Dashboard • Implantações</strong>
+          <span>YOtech Consultoria em Sistemas</span>
+        </div>
       </div>
-      <p id="resumo" class="muted"></p>
-    </div>
 
-    <div class="card">
-      <h3>Inícios por mês</h3>
-      <canvas id="chartMes"></canvas>
-    </div>
+      <div class="actions">
+        <div class="pill"><span class="dot"></span> Fonte: Google Sheets (Apps Script)</div>
+        <button class="btn secondary" id="btnReload">Atualizar</button>
+        <button class="btn" id="btnNovo">Novo cliente</button>
+      </div>
+    </header>
+
+    <main>
+      <!-- ESQUERDA -->
+      <section class="card">
+        <h2>📊 Visão geral</h2>
+        <p class="sub">Filtre por período (data de início) e veja quais clientes iniciaram e a previsão de start.</p>
+
+        <div class="grid">
+          <div class="field">
+            <label>De</label>
+            <input type="date" id="dtDe" />
+          </div>
+          <div class="field">
+            <label>Até</label>
+            <input type="date" id="dtAte" />
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:12px">
+          <button class="btn" id="btnAplicar">Aplicar filtro</button>
+          <span class="tag" id="tagPeriodo">Período: (sem filtro)</span>
+        </div>
+
+        <div class="kpis">
+          <div class="kpi">
+            <div class="n" id="kpiTotal">—</div>
+            <div class="l">Clientes no período</div>
+          </div>
+          <div class="kpi">
+            <div class="n" id="kpiIniciados">—</div>
+            <div class="l">Com início definido</div>
+          </div>
+        </div>
+
+        <div style="margin-top:14px; overflow:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>Cliente</th>
+                <th>Data de início</th>
+                <th>Previsão de start</th>
+              </tr>
+            </thead>
+            <tbody id="tbody">
+              <tr><td colspan="3" style="color:var(--muted)">Carregando…</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="footer">
+          Hospedado no GitHub Pages • Consumindo Apps Script
+        </div>
+      </section>
+
+      <!-- DIREITA -->
+      <aside class="card" id="novoClienteCard">
+        <h2>➕ Cadastro de novo cliente</h2>
+        <p class="sub">Essa área é visual (mock). Depois a gente conecta com o Apps Script para criar pasta, copiar templates e registrar na planilha.</p>
+
+        <div class="field">
+          <label>Nome do cliente</label>
+          <input id="inCliente" placeholder="Ex: Clínica Exemplo" />
+        </div>
+
+        <div class="field" style="margin-top:12px">
+          <label>Implantador responsável</label>
+          <select id="inImplantador">
+            <option value="">Selecione…</option>
+            <option>Anderson</option>
+            <option>Equipe 1</option>
+            <option>Equipe 2</option>
+          </select>
+        </div>
+
+        <div class="grid" style="margin-top:12px">
+          <div class="field">
+            <label>Previsão de start</label>
+            <input type="date" id="inStart" />
+          </div>
+          <div class="field">
+            <label>Data de início (opcional)</label>
+            <input type="date" id="inInicio" />
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:14px">
+          <button class="btn" id="btnCriar">Criar (mock)</button>
+          <button class="btn secondary" id="btnLimpar">Limpar</button>
+        </div>
+
+        <div class="toast" id="toast"></div>
+
+        <p class="sub" style="margin-top:14px">
+          Quando você quiser, eu te passo o Apps Script (POST) + token pra esse botão criar tudo no Drive e atualizar a planilha.
+        </p>
+      </aside>
+    </main>
   </div>
 
-  <div class="card" style="margin-top:12px;">
-    <h3>Clientes no período</h3>
-    <table>
-      <thead>
-        <tr>
-          <th>Cliente</th>
-          <th>Data de início</th>
-          <th>Previsão de start</th>
-        </tr>
-      </thead>
-      <tbody id="tbody"></tbody>
-    </table>
-  </div>
+  <div class="edge"></div>
 
-  <script src="./app.js"></script>
+  <script>
+    // ==========================
+    // CONFIG
+    // ==========================
+    // Cole sua URL do Apps Script aqui (tem que terminar com /exec)
+    // Ex: "https://script.google.com/macros/s/XXXX/exec"
+    const API_URL = "COLE_SUA_URL_AQUI";
+
+    // guarda tudo carregado para filtrar sem ficar chamando a API toda hora
+    let ALL_ROWS = [];
+
+    // ==========================
+    // HELPERS
+    // ==========================
+    const $ = (id) => document.getElementById(id);
+
+    function escapeHtml(s){
+      return String(s ?? "")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+    function isoToBR(iso){
+      if(!iso) return "";
+      const [y,m,d] = String(iso).split("-");
+      if(!y||!m||!d) return "";
+      return `${d}/${m}/${y}`;
+    }
+
+    function parseBRToISO(br){
+      // aceita dd/MM/yyyy
+      const s = String(br || "").trim();
+      if(!/^\d{2}\/\d{2}\/\d{4}$/.test(s)) return "";
+      const [dd,mm,yyyy] = s.split("/");
+      return `${yyyy}-${mm}-${dd}`;
+    }
+
+    function isValidISO(s){
+      return /^\d{4}-\d{2}-\d{2}$/.test(String(s||"").trim());
+    }
+
+    // converte vários formatos para ISO yyyy-mm-dd
+    function toISODateAny(value){
+      const v = String(value || "").trim();
+      if(!v) return "";
+
+      // já vem ISO
+      if(isValidISO(v)) return v;
+
+      // dd/MM/yyyy
+      const br = parseBRToISO(v);
+      if(br) return br;
+
+      // Date string tipo: "Thu Aug 07 2025 00:00:00 GMT-0300 (Horário Padrão de Brasília)"
+      const d = new Date(v);
+      if(!isNaN(d.getTime())){
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth()+1).padStart(2,"0");
+        const dd = String(d.getDate()).padStart(2,"0");
+        return `${yyyy}-${mm}-${dd}`;
+      }
+
+      return "";
+    }
+
+    // exibe só dd/MM/yyyy (sem hora), independente do formato de entrada
+    function displayDateAny(value){
+      const iso = toISODateAny(value);
+      return iso ? isoToBR(iso) : String(value || "");
+    }
+
+    function showToast(msg, type="ok"){
+      const t = $("toast");
+      t.className = `toast ${type}`;
+      t.textContent = msg;
+      t.style.display = "block";
+      setTimeout(()=>{ t.style.display="none"; }, 3200);
+    }
+
+    // ==========================
+    // LOAD + FILTER
+    // ==========================
+    async function loadData(){
+      const tbody = $("tbody");
+      tbody.innerHTML = `<tr><td colspan="3" style="color:var(--muted)">Carregando…</td></tr>`;
+
+      // se esqueceu de colar a URL, usa mock pra não ficar tudo vazio
+      if(!API_URL || API_URL.includes("COLE_SUA_URL_AQUI")){
+        ALL_ROWS = [
+          {cliente:"HOSL", data_inicio:"07/08/2025", previsao_start:"05/01/2026", inicio_iso:"2025-08-07"},
+          {cliente:"CDC", data_inicio:"04/07/2025", previsao_start:"02/03/2026", inicio_iso:"2025-07-04"},
+          {cliente:"Clínica PECA", data_inicio:"21/11/2025", previsao_start:"01/04/2026", inicio_iso:"2025-11-21"},
+          {cliente:"Clinica Brasil", data_inicio:"não iniciado ainda", previsao_start:"cliente sem previsão de start", inicio_iso:""},
+        ];
+        applyFilterAndRender();
+        return;
+      }
+
+      try{
+        const url = API_URL + (API_URL.includes("?") ? "&" : "?") + "nocache=" + Date.now();
+        const res = await fetch(url);
+        const json = await res.json();
+        ALL_ROWS = Array.isArray(json.data) ? json.data : [];
+        applyFilterAndRender();
+      }catch(err){
+        tbody.innerHTML = `<tr><td colspan="3" style="color:var(--muted)">Erro ao carregar dados: ${escapeHtml(err?.message || err)}</td></tr>`;
+      }
+    }
+
+    function applyFilterAndRender(){
+      const de  = $("dtDe").value;   // ISO yyyy-mm-dd
+      const ate = $("dtAte").value;  // ISO yyyy-mm-dd
+
+      $("tagPeriodo").textContent = (de || ate)
+        ? `Período: ${isoToBR(de) || "…"} → ${isoToBR(ate) || "…"}`
+        : "Período: (sem filtro)";
+
+      const filtered = ALL_ROWS.filter(r => {
+        // tenta achar ISO confiável:
+        // 1) inicio_iso
+        // 2) data_inicio (pode vir dd/MM/yyyy ou Date string)
+        const iso = toISODateAny(r.inicio_iso) || toISODateAny(r.data_inicio);
+
+        // se não tem data (não iniciado), só entra se não tiver filtro
+        if(!iso){
+          return !(de || ate);
+        }
+
+        if(de && iso < de) return false;
+        if(ate && iso > ate) return false;
+        return true;
+      });
+
+      render(filtered);
+    }
+
+    function render(rows){
+      const tbody = $("tbody");
+      tbody.innerHTML = "";
+
+      $("kpiTotal").textContent = rows.length;
+      $("kpiIniciados").textContent = rows.filter(r => {
+        const s = String(r.data_inicio || "").toLowerCase();
+        return s && !s.includes("não iniciado");
+      }).length;
+
+      if(rows.length === 0){
+        tbody.innerHTML = `<tr><td colspan="3" style="color:var(--muted)">Nenhum cliente no período.</td></tr>`;
+        return;
+      }
+
+      for(const r of rows){
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${escapeHtml(r.cliente ?? "")}</td>
+          <td>${escapeHtml(displayDateAny(r.data_inicio ?? ""))}</td>
+          <td>${escapeHtml(displayDateAny(r.previsao_start ?? ""))}</td>
+        `;
+        tbody.appendChild(tr);
+      }
+    }
+
+    // ==========================
+    // EVENTS
+    // ==========================
+    $("btnReload").addEventListener("click", loadData);
+    $("btnAplicar").addEventListener("click", applyFilterAndRender);
+
+    $("btnCriar").addEventListener("click", () => {
+      const cliente = $("inCliente").value.trim();
+      const impl = $("inImplantador").value.trim();
+      if(!cliente) return showToast("Informe o nome do cliente.", "bad");
+      if(!impl) return showToast("Selecione o implantador responsável.", "bad");
+      showToast(`Mock criado: ${cliente} • Resp.: ${impl}`, "ok");
+    });
+
+    $("btnLimpar").addEventListener("click", () => {
+      $("inCliente").value = "";
+      $("inImplantador").value = "";
+      $("inStart").value = "";
+      $("inInicio").value = "";
+      showToast("Campos limpos.", "ok");
+    });
+
+    $("btnNovo").addEventListener("click", () => {
+      $("inCliente").focus();
+      window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+    });
+
+    // init
+    loadData();
+  </script>
 </body>
 </html>
