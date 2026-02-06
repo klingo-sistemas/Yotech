@@ -1,7 +1,7 @@
 // ===============================
 // CONFIG
 // ===============================
-const API_URL = "https://script.google.com/macros/s/AKfycbzLY6WE_XD26ql7phJ_b4VQ7pZLl-eJehG85x7gPZeOwLbqJpUYYthzvBA4x9mMqghu/exec"; // ex: https://script.google.com/macros/s/.../exec
+const API_URL = "https://script.google.com/macros/s/AKfycbzLY6WE_XD26ql7phJ_b4VQ7pZLl-eJehG85x7gPZeOwLbqJpUYYthzvBA4x9mMqghu/exec";
 
 // ===============================
 // STATE
@@ -17,7 +17,7 @@ function parseBrDate(str) {
   const s = str.trim();
   if (!/^\d{2}\/\d{2}\/\d{4}$/.test(s)) return null;
   const [dd, mm, yyyy] = s.split("/").map(Number);
-  const d = new Date(yyyy, mm - 1, dd);
+  const d = new Date(yyyy, mm - 1, dd); // sem ISO pra evitar timezone bug
   return Number.isNaN(d.getTime()) ? null : d;
 }
 
@@ -46,21 +46,19 @@ function escapeHtml(s) {
 }
 
 // ===============================
-// JSONP fallback
+// JSONP fallback (pra evitar CORS)
 // ===============================
 async function fetchData() {
   setError("");
 
-  // tentativa fetch
+  // tentativa fetch normal
   try {
     const res = await fetch(API_URL, { method: "GET" });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const json = await res.json();
-    return json;
+    return await res.json();
   } catch (_) {
     // fallback JSONP
-    const jsonp = await fetchJsonp(`${API_URL}?callback=__cb`);
-    return jsonp;
+    return await fetchJsonp(`${API_URL}?callback=__cb`);
   }
 }
 
@@ -143,15 +141,30 @@ function setError(msg) {
 }
 
 // ===============================
-// NORMALIZE API DATA ({ok, data})
+// ✅ NORMALIZE API DATA (corrigido)
+// Aceita:
+// - Array direto: [{...}]
+// - { ok:true, data:[{...}] }
+// - { ok:true, data:{ data:[{...}] } } (caso alguma versão tenha aninhado)
 // ===============================
 function normalizeRows(payload) {
-  if (!payload || payload.ok !== true) {
-    const err = payload?.error || "Resposta inválida da API";
+  console.log("PAYLOAD DA API:", payload);
+
+  let rows = null;
+
+  if (Array.isArray(payload)) {
+    rows = payload;
+  } else if (payload && payload.ok === true && Array.isArray(payload.data)) {
+    rows = payload.data;
+  } else if (payload && payload.ok === true && payload.data && Array.isArray(payload.data.data)) {
+    rows = payload.data.data;
+  } else {
+    const err =
+      payload?.error ||
+      `Resposta inesperada da API. Esperado array ou {ok:true,data:[...]}. Tipo recebido: ${Object.prototype.toString.call(payload)}`;
     throw new Error(err);
   }
 
-  const rows = payload.data || [];
   return rows.map((r) => {
     const cliente = strNorm(r.cliente);
     const implantador = strNorm(r.implantador);
@@ -159,17 +172,14 @@ function normalizeRows(payload) {
     const data_inicio = strNorm(r.data_inicio);
     const previsao_start = strNorm(r.previsao_start);
 
-    const dInicio = parseBrDate(data_inicio);      // "não iniciado ainda" vira null
-    const dPrev = parseBrDate(previsao_start);     // "cliente sem previsão..." vira null
-
     return {
       cliente,
       implantador,
       concluido,
       data_inicio,
       previsao_start,
-      dInicio,
-      dPrev,
+      dInicio: parseBrDate(data_inicio),
+      dPrev: parseBrDate(previsao_start),
     };
   });
 }
@@ -203,13 +213,11 @@ function applyFilters() {
       if (!hay.includes(search)) return false;
     }
 
-    // filtro por mês/ano (baseado no campo escolhido)
     if (ym) {
       const baseDate = (monthBase === "data_inicio") ? r.dInicio : r.dPrev;
       if (!sameMonthYear(baseDate, ym)) return false;
     }
 
-    // filtros de intervalo (pode usar 1 ou 2 ao mesmo tempo)
     if (useInicio) {
       const d = r.dInicio;
       if (!d) return false;
@@ -239,7 +247,7 @@ function renderAll() {
   const open = total - done;
 
   const today = new Date();
-  today.setHours(0,0,0,0);
+  today.setHours(0, 0, 0, 0);
 
   const late = filtered.filter((r) => {
     if (isConcluidoSim(r.concluido)) return false;
@@ -260,7 +268,7 @@ function renderAll() {
     const key = r.implantador || "(Sem implantador)";
     map.set(key, (map.get(key) || 0) + 1);
   }
-  const arr = [...map.entries()].sort((a,b) => b[1]-a[1]);
+  const arr = [...map.entries()].sort((a, b) => b[1] - a[1]);
   const max = arr.length ? arr[0][1] : 1;
 
   ui.barsImplantador.innerHTML = arr.map(([name, n]) => {
@@ -274,8 +282,8 @@ function renderAll() {
     `;
   }).join("");
 
-  // linha do tempo: ordem por previsão, depois início
-  const sorted = [...filtered].sort((a,b) => {
+  // linha do tempo
+  const sorted = [...filtered].sort((a, b) => {
     const ap = a.dPrev ? a.dPrev.getTime() : Number.POSITIVE_INFINITY;
     const bp = b.dPrev ? b.dPrev.getTime() : Number.POSITIVE_INFINITY;
     if (ap !== bp) return ap - bp;
@@ -315,7 +323,6 @@ async function init() {
 
     ui.lastUpdate.textContent = `Atualizado: ${new Date().toLocaleString("pt-BR")}`;
 
-    // popula implantadores
     const imps = [...new Set(rawData.map(r => r.implantador).filter(Boolean))].sort();
     ui.fImplantador.innerHTML =
       `<option value="">Todos</option>` +
