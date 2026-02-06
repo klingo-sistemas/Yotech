@@ -7,15 +7,14 @@
   <meta name="color-scheme" content="dark" />
   <style>
     :root{
-      /* Paleta inspirada na sua imagem */
-      --bg0:#061a27;      /* navy bem escuro */
-      --bg1:#082335;      /* navy */
-      --bg2:#0b2f46;      /* navy + azul */
-      --line:#0e3a55;     /* borda */
-      --txt:#e9f3f8;      /* texto principal */
-      --muted:#a8c1cf;    /* texto secundário */
-      --brand:#15c6c6;    /* teal/ciano */
-      --brand2:#0aa0b3;   /* teal mais fechado */
+      --bg0:#061a27;
+      --bg1:#082335;
+      --bg2:#0b2f46;
+      --line:#0e3a55;
+      --txt:#e9f3f8;
+      --muted:#a8c1cf;
+      --brand:#15c6c6;
+      --brand2:#0aa0b3;
       --ok:#22c55e;
       --warn:#f59e0b;
       --bad:#ef4444;
@@ -38,7 +37,6 @@
       overflow-x:hidden;
     }
 
-    /* faixas teal topo/rodapé */
     .edge{
       height:8px;
       background: linear-gradient(90deg, transparent, var(--brand), transparent);
@@ -299,8 +297,6 @@
       font-size: 12px;
       text-align:center;
     }
-    a{ color: var(--brand); text-decoration:none; }
-    a:hover{ text-decoration:underline; }
 
     .toast{
       margin-top:12px;
@@ -337,7 +333,7 @@
     </header>
 
     <main>
-      <!-- ESQUERDA: Dashboard -->
+      <!-- ESQUERDA -->
       <section class="card">
         <h2>📊 Visão geral</h2>
         <p class="sub">Filtre por período (data de início) e veja quais clientes iniciaram e a previsão de start.</p>
@@ -361,7 +357,7 @@
         <div class="kpis">
           <div class="kpi">
             <div class="n" id="kpiTotal">—</div>
-            <div class="l">Clientes retornados</div>
+            <div class="l">Clientes no período</div>
           </div>
           <div class="kpi">
             <div class="n" id="kpiIniciados">—</div>
@@ -385,14 +381,14 @@
         </div>
 
         <div class="footer">
-          Dica: você pode hospedar isso no GitHub Pages e apontar para seu Apps Script.
+          Hospedado no GitHub Pages • Consumindo Apps Script
         </div>
       </section>
 
-      <!-- DIREITA: Form Novo Cliente (visual) -->
+      <!-- DIREITA -->
       <aside class="card" id="novoClienteCard">
         <h2>➕ Cadastro de novo cliente</h2>
-        <p class="sub">Essa tela pode chamar um Apps Script para criar pasta no Drive, copiar templates e registrar na planilha.</p>
+        <p class="sub">Essa área é visual (mock). Depois a gente conecta com o Apps Script para criar pasta, copiar templates e registrar na planilha.</p>
 
         <div class="field">
           <label>Nome do cliente</label>
@@ -428,7 +424,7 @@
         <div class="toast" id="toast"></div>
 
         <p class="sub" style="margin-top:14px">
-          Quando você quiser ativar de verdade, a gente conecta esse botão num endpoint do Apps Script (com token).
+          Quando você quiser, eu te passo o Apps Script (POST) + token pra esse botão criar tudo no Drive e atualizar a planilha.
         </p>
       </aside>
     </main>
@@ -437,78 +433,20 @@
   <div class="edge"></div>
 
   <script>
-    // --- CONFIG ---
-    // Coloque aqui seu endpoint do Apps Script (API JSON/JSONP)
-    const API_URL = ""; // ex: "https://script.google.com/macros/s/SEU_ID/exec"
+    // ==========================
+    // CONFIG
+    // ==========================
+    // Cole sua URL do Apps Script aqui (tem que terminar com /exec)
+    // Ex: "https://script.google.com/macros/s/XXXX/exec"
+    const API_URL = "COLE_SUA_URL_AQUI";
 
-    // --- Helpers ---
+    // guarda tudo carregado para filtrar sem ficar chamando a API toda hora
+    let ALL_ROWS = [];
+
+    // ==========================
+    // HELPERS
+    // ==========================
     const $ = (id) => document.getElementById(id);
-
-    function isoToBR(iso){
-      if(!iso) return "";
-      const [y,m,d] = iso.split("-");
-      if(!y||!m||!d) return "";
-      return `${d}/${m}/${y}`;
-    }
-
-    function showToast(msg, type="ok"){
-      const t = $("toast");
-      t.className = `toast ${type}`;
-      t.textContent = msg;
-      t.style.display = "block";
-      setTimeout(()=>{ t.style.display="none"; }, 3200);
-    }
-
-    // --- Dashboard (mock se API_URL vazio) ---
-    async function loadData(){
-      if(!API_URL){
-        // MOCK para você ver o layout funcionando
-        const mock = [
-          {cliente:"HOSL", data_inicio:"07/08/2025", previsao_start:"05/01/2026"},
-          {cliente:"CDC", data_inicio:"04/07/2025", previsao_start:"02/03/2026"},
-          {cliente:"Clínica PECA", data_inicio:"21/11/2025", previsao_start:"01/04/2026"},
-          {cliente:"Clinica Brasil", data_inicio:"não iniciado ainda", previsao_start:"cliente sem previsão de start"},
-        ];
-        render(mock);
-        return;
-      }
-
-      // Se for consumir JSON normal, você pode usar fetch.
-      // (Se der CORS, a gente troca para JSONP)
-      const url = API_URL + (API_URL.includes("?") ? "&" : "?") + "nocache=" + Date.now();
-      const res = await fetch(url);
-      const json = await res.json();
-      render(json.data || []);
-    }
-
-    function render(rows){
-      const tbody = $("tbody");
-      tbody.innerHTML = "";
-
-      const de = $("dtDe").value || "";
-      const ate = $("dtAte").value || "";
-      $("tagPeriodo").textContent = (de || ate)
-        ? `Período: ${isoToBR(de) || "…"} → ${isoToBR(ate) || "…"}`
-        : "Período: (sem filtro)";
-
-      $("kpiTotal").textContent = rows.length;
-      $("kpiIniciados").textContent = rows.filter(r => r.data_inicio && !String(r.data_inicio).toLowerCase().includes("não iniciado")).length;
-
-      if(rows.length === 0){
-        tbody.innerHTML = `<tr><td colspan="3" style="color:var(--muted)">Nenhum cliente no período.</td></tr>`;
-        return;
-      }
-
-      for(const r of rows){
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${escapeHtml(r.cliente ?? "")}</td>
-          <td>${escapeHtml(r.data_inicio ?? "")}</td>
-          <td>${escapeHtml(r.previsao_start ?? "")}</td>
-        `;
-        tbody.appendChild(tr);
-      }
-    }
 
     function escapeHtml(s){
       return String(s ?? "")
@@ -519,17 +457,153 @@
         .replaceAll("'","&#039;");
     }
 
-    // --- Eventos ---
-    $("btnReload").addEventListener("click", loadData);
+    function isoToBR(iso){
+      if(!iso) return "";
+      const [y,m,d] = String(iso).split("-");
+      if(!y||!m||!d) return "";
+      return `${d}/${m}/${y}`;
+    }
 
-    $("btnAplicar").addEventListener("click", async () => {
-      // Aqui, se você quiser, a gente passa start/end no endpoint.
-      // Ex: API_URL + "?start=YYYY-MM-DD&end=YYYY-MM-DD"
-      await loadData();
-    });
+    function parseBRToISO(br){
+      // aceita dd/MM/yyyy
+      const s = String(br || "").trim();
+      if(!/^\d{2}\/\d{2}\/\d{4}$/.test(s)) return "";
+      const [dd,mm,yyyy] = s.split("/");
+      return `${yyyy}-${mm}-${dd}`;
+    }
+
+    function isValidISO(s){
+      return /^\d{4}-\d{2}-\d{2}$/.test(String(s||"").trim());
+    }
+
+    // converte vários formatos para ISO yyyy-mm-dd
+    function toISODateAny(value){
+      const v = String(value || "").trim();
+      if(!v) return "";
+
+      // já vem ISO
+      if(isValidISO(v)) return v;
+
+      // dd/MM/yyyy
+      const br = parseBRToISO(v);
+      if(br) return br;
+
+      // Date string tipo: "Thu Aug 07 2025 00:00:00 GMT-0300 (Horário Padrão de Brasília)"
+      const d = new Date(v);
+      if(!isNaN(d.getTime())){
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth()+1).padStart(2,"0");
+        const dd = String(d.getDate()).padStart(2,"0");
+        return `${yyyy}-${mm}-${dd}`;
+      }
+
+      return "";
+    }
+
+    // exibe só dd/MM/yyyy (sem hora), independente do formato de entrada
+    function displayDateAny(value){
+      const iso = toISODateAny(value);
+      return iso ? isoToBR(iso) : String(value || "");
+    }
+
+    function showToast(msg, type="ok"){
+      const t = $("toast");
+      t.className = `toast ${type}`;
+      t.textContent = msg;
+      t.style.display = "block";
+      setTimeout(()=>{ t.style.display="none"; }, 3200);
+    }
+
+    // ==========================
+    // LOAD + FILTER
+    // ==========================
+    async function loadData(){
+      const tbody = $("tbody");
+      tbody.innerHTML = `<tr><td colspan="3" style="color:var(--muted)">Carregando…</td></tr>`;
+
+      // se esqueceu de colar a URL, usa mock pra não ficar tudo vazio
+      if(!API_URL || API_URL.includes("COLE_SUA_URL_AQUI")){
+        ALL_ROWS = [
+          {cliente:"HOSL", data_inicio:"07/08/2025", previsao_start:"05/01/2026", inicio_iso:"2025-08-07"},
+          {cliente:"CDC", data_inicio:"04/07/2025", previsao_start:"02/03/2026", inicio_iso:"2025-07-04"},
+          {cliente:"Clínica PECA", data_inicio:"21/11/2025", previsao_start:"01/04/2026", inicio_iso:"2025-11-21"},
+          {cliente:"Clinica Brasil", data_inicio:"não iniciado ainda", previsao_start:"cliente sem previsão de start", inicio_iso:""},
+        ];
+        applyFilterAndRender();
+        return;
+      }
+
+      try{
+        const url = API_URL + (API_URL.includes("?") ? "&" : "?") + "nocache=" + Date.now();
+        const res = await fetch(url);
+        const json = await res.json();
+        ALL_ROWS = Array.isArray(json.data) ? json.data : [];
+        applyFilterAndRender();
+      }catch(err){
+        tbody.innerHTML = `<tr><td colspan="3" style="color:var(--muted)">Erro ao carregar dados: ${escapeHtml(err?.message || err)}</td></tr>`;
+      }
+    }
+
+    function applyFilterAndRender(){
+      const de  = $("dtDe").value;   // ISO yyyy-mm-dd
+      const ate = $("dtAte").value;  // ISO yyyy-mm-dd
+
+      $("tagPeriodo").textContent = (de || ate)
+        ? `Período: ${isoToBR(de) || "…"} → ${isoToBR(ate) || "…"}`
+        : "Período: (sem filtro)";
+
+      const filtered = ALL_ROWS.filter(r => {
+        // tenta achar ISO confiável:
+        // 1) inicio_iso
+        // 2) data_inicio (pode vir dd/MM/yyyy ou Date string)
+        const iso = toISODateAny(r.inicio_iso) || toISODateAny(r.data_inicio);
+
+        // se não tem data (não iniciado), só entra se não tiver filtro
+        if(!iso){
+          return !(de || ate);
+        }
+
+        if(de && iso < de) return false;
+        if(ate && iso > ate) return false;
+        return true;
+      });
+
+      render(filtered);
+    }
+
+    function render(rows){
+      const tbody = $("tbody");
+      tbody.innerHTML = "";
+
+      $("kpiTotal").textContent = rows.length;
+      $("kpiIniciados").textContent = rows.filter(r => {
+        const s = String(r.data_inicio || "").toLowerCase();
+        return s && !s.includes("não iniciado");
+      }).length;
+
+      if(rows.length === 0){
+        tbody.innerHTML = `<tr><td colspan="3" style="color:var(--muted)">Nenhum cliente no período.</td></tr>`;
+        return;
+      }
+
+      for(const r of rows){
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${escapeHtml(r.cliente ?? "")}</td>
+          <td>${escapeHtml(displayDateAny(r.data_inicio ?? ""))}</td>
+          <td>${escapeHtml(displayDateAny(r.previsao_start ?? ""))}</td>
+        `;
+        tbody.appendChild(tr);
+      }
+    }
+
+    // ==========================
+    // EVENTS
+    // ==========================
+    $("btnReload").addEventListener("click", loadData);
+    $("btnAplicar").addEventListener("click", applyFilterAndRender);
 
     $("btnCriar").addEventListener("click", () => {
-      // Mock (só UI)
       const cliente = $("inCliente").value.trim();
       const impl = $("inImplantador").value.trim();
       if(!cliente) return showToast("Informe o nome do cliente.", "bad");
