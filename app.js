@@ -209,4 +209,157 @@ function applyFilters() {
     // filtro por mês/ano (baseado no campo escolhido)
     if (ym) {
       const baseDate = (monthBase === "data_inicio") ? r.dInicio : r.dPrev;
-      if (!sameMonthYear(baseDate, ym))
+      if (!sameMonthYear(baseDate, ym)) return false;
+    }
+
+    // filtros de intervalo (pode usar 1 ou 2 ao mesmo tempo)
+    // regra: se marcou ambos, precisa passar em ambos.
+    if (useInicio) {
+      const d = r.dInicio;
+      if (!d) return false;
+      if (inicioDe && d < inicioDe) return false;
+      if (inicioAte && d > inicioAte) return false;
+    }
+    if (usePrev) {
+      const d = r.dPrev;
+      // se previsao_start for texto tipo "Sem previsão de start", dPrev vira null -> não passa
+      if (!d) return false;
+      if (prevDe && d < prevDe) return false;
+      if (prevAte && d > prevAte) return false;
+    }
+
+    return true;
+  });
+
+  renderAll();
+}
+
+// ===============================
+// RENDER
+// ===============================
+function renderAll() {
+  // KPIs
+  const total = filtered.length;
+  const done = filtered.filter((r) => isConcluidoSim(r.concluido)).length;
+  const open = total - done;
+
+  const today = new Date();
+  today.setHours(0,0,0,0);
+
+  const late = filtered.filter((r) => {
+    if (isConcluidoSim(r.concluido)) return false;
+    if (!r.dPrev) return false;
+    return r.dPrev < today;
+  }).length;
+
+  ui.kTotal.textContent = total;
+  ui.kDone.textContent = done;
+  ui.kOpen.textContent = open;
+  ui.kLate.textContent = late;
+
+  ui.countInfo.textContent = `Mostrando ${total} de ${rawData.length} registros`;
+
+  // Por implantador (barras)
+  const map = new Map();
+  for (const r of filtered) {
+    const key = r.implantador || "(Sem implantador)";
+    map.set(key, (map.get(key) || 0) + 1);
+  }
+  const arr = [...map.entries()].sort((a,b) => b[1]-a[1]);
+  const max = arr.length ? arr[0][1] : 1;
+
+  ui.barsImplantador.innerHTML = arr.map(([name, n]) => {
+    const pct = Math.round((n / max) * 100);
+    return `
+      <div class="barrow" title="${name}">
+        <div class="name">${escapeHtml(name)}</div>
+        <div class="bar"><i style="width:${pct}%"></i></div>
+        <div class="num">${n}</div>
+      </div>
+    `;
+  }).join("");
+
+  // Linha do tempo (ordenar por previsão, depois início)
+  const sorted = [...filtered].sort((a,b) => {
+    const ap = a.dPrev ? a.dPrev.getTime() : Number.POSITIVE_INFINITY;
+    const bp = b.dPrev ? b.dPrev.getTime() : Number.POSITIVE_INFINITY;
+    if (ap !== bp) return ap - bp;
+
+    const ai = a.dInicio ? a.dInicio.getTime() : Number.POSITIVE_INFINITY;
+    const bi = b.dInicio ? b.dInicio.getTime() : Number.POSITIVE_INFINITY;
+    return ai - bi;
+  });
+
+  ui.tblBody.innerHTML = sorted.map((r) => {
+    const pill = isConcluidoSim(r.concluido)
+      ? `<span class="pill"><span class="dot good"></span>Sim</span>`
+      : `<span class="pill"><span class="dot warn"></span>Não</span>`;
+
+    return `
+      <tr>
+        <td>${escapeHtml(r.cliente || "-")}</td>
+        <td>${escapeHtml(r.implantador || "-")}</td>
+        <td>${pill}</td>
+        <td>${escapeHtml(r.data_inicio || "-")}</td>
+        <td>${escapeHtml(r.previsao_start || "-")}</td>
+      </tr>
+    `;
+  }).join("");
+}
+
+function escapeHtml(s) {
+  return (s ?? "").toString()
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+// ===============================
+// INIT
+// ===============================
+async function init() {
+  ui.lastUpdate.textContent = "Carregando dados…";
+
+  try {
+    const data = await fetchData();
+    rawData = normalizeRows(data);
+    ui.lastUpdate.textContent = `Atualizado: ${new Date().toLocaleString("pt-BR")}`;
+
+    // popula select de implantador
+    const imps = [...new Set(rawData.map(r => r.implantador).filter(Boolean))].sort();
+    ui.fImplantador.innerHTML = `<option value="">Todos</option>` + imps.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join("");
+
+    applyFilters();
+  } catch (e) {
+    ui.lastUpdate.textContent = "Erro ao carregar";
+    setError(e.message || String(e));
+  }
+}
+
+function clearFilters() {
+  ui.fImplantador.value = "";
+  ui.fStatus.value = "";
+  ui.fMonthBase.value = "previsao_start";
+  ui.fMonth.value = "";
+  ui.useInicio.checked = true;
+  ui.usePrev.checked = true;
+  ui.inicioDe.value = "";
+  ui.inicioAte.value = "";
+  ui.prevDe.value = "";
+  ui.prevAte.value = "";
+  ui.fSearch.value = "";
+  applyFilters();
+}
+
+[
+  ui.fImplantador, ui.fStatus, ui.fMonthBase, ui.fMonth,
+  ui.useInicio, ui.usePrev,
+  ui.inicioDe, ui.inicioAte, ui.prevDe, ui.prevAte, ui.fSearch
+].forEach((x) => x.addEventListener("input", applyFilters));
+
+ui.btnRefresh.addEventListener("click", init);
+ui.btnClear.addEventListener("click", clearFilters);
+
+init();
