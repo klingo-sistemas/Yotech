@@ -1,7 +1,7 @@
 // ===============================
 // CONFIG
 // ===============================
-const API_URL = "https://script.google.com/macros/s/AKfycbzLY6WE_XD26ql7phJ_b4VQ7pZLl-eJehG85x7gPZeOwLbqJpUYYthzvBA4x9mMqghu/exec"; // .../exec
+const API_URL = "https://script.google.com/macros/s/AKfycbzLY6WE_XD26ql7phJ_b4VQ7pZLl-eJehG85x7gPZeOwLbqJpUYYthzvBA4x9mMqghu/exec"; // ex: https://script.google.com/macros/s/.../exec
 
 // ===============================
 // STATE
@@ -10,28 +10,18 @@ let rawData = [];
 let filtered = [];
 
 // ===============================
-// HELPERS - datas (DD/MM/YYYY) e normalização
+// HELPERS - datas (DD/MM/YYYY) estáveis
 // ===============================
 function parseBrDate(str) {
-  // aceita "07/08/2025" (dd/mm/yyyy). Retorna Date ou null.
   if (!str || typeof str !== "string") return null;
   const s = str.trim();
   if (!/^\d{2}\/\d{2}\/\d{4}$/.test(s)) return null;
   const [dd, mm, yyyy] = s.split("/").map(Number);
-  // Date(yyyy, mm-1, dd) evita bug de timezone do ISO
   const d = new Date(yyyy, mm - 1, dd);
-  if (Number.isNaN(d.getTime())) return null;
-  return d;
-}
-
-function toISODateInput(d) {
-  // yyyy-mm-dd (pra preencher input[type=date], se precisar)
-  const pad = (n) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  return Number.isNaN(d.getTime()) ? null : d;
 }
 
 function sameMonthYear(dateObj, ym) {
-  // ym no formato "YYYY-MM" (input month)
   if (!dateObj || !ym) return false;
   const [Y, M] = ym.split("-").map(Number);
   return dateObj.getFullYear() === Y && (dateObj.getMonth() + 1) === M;
@@ -46,29 +36,31 @@ function isConcluidoSim(v) {
   return x === "sim" || x === "true" || x === "1";
 }
 
+function escapeHtml(s) {
+  return (s ?? "").toString()
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
 // ===============================
-// FETCH (com fallback JSONP opcional)
+// JSONP fallback
 // ===============================
 async function fetchData() {
   setError("");
 
-  // 1) tentativa padrão (fetch)
+  // tentativa fetch
   try {
     const res = await fetch(API_URL, { method: "GET" });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const json = await res.json();
     return json;
-  } catch (e) {
-    // 2) fallback JSONP (caso CORS atrapalhe)
-    // Se você não quiser JSONP, pode remover isso.
-    try {
-      const json = await fetchJsonp(`${API_URL}?callback=__cb`);
-      return json;
-    } catch (e2) {
-      throw new Error(
-        "Falha ao buscar dados da API (fetch/JSONP). Verifique a URL do Web App e permissões do Apps Script."
-      );
-    }
+  } catch (_) {
+    // fallback JSONP
+    const jsonp = await fetchJsonp(`${API_URL}?callback=__cb`);
+    return jsonp;
   }
 }
 
@@ -76,6 +68,7 @@ function fetchJsonp(url) {
   return new Promise((resolve, reject) => {
     const cbName = `cb_${Date.now()}_${Math.random().toString(16).slice(2)}`;
     const script = document.createElement("script");
+
     const timeout = setTimeout(() => {
       cleanup();
       reject(new Error("Timeout JSONP"));
@@ -107,7 +100,7 @@ function fetchJsonp(url) {
 }
 
 // ===============================
-// UI HOOKS
+// UI
 // ===============================
 const el = (id) => document.getElementById(id);
 
@@ -150,20 +143,24 @@ function setError(msg) {
 }
 
 // ===============================
-// DATA MAPPING
-// Espera receber algo assim:
-// [{ cliente, implantador, concluido, data_inicio, previsao_start }, ...]
+// NORMALIZE API DATA ({ok, data})
 // ===============================
-function normalizeRows(rows) {
-  return (rows || []).map((r) => {
+function normalizeRows(payload) {
+  if (!payload || payload.ok !== true) {
+    const err = payload?.error || "Resposta inválida da API";
+    throw new Error(err);
+  }
+
+  const rows = payload.data || [];
+  return rows.map((r) => {
     const cliente = strNorm(r.cliente);
     const implantador = strNorm(r.implantador);
     const concluido = strNorm(r.concluido);
     const data_inicio = strNorm(r.data_inicio);
     const previsao_start = strNorm(r.previsao_start);
 
-    const dInicio = parseBrDate(data_inicio);
-    const dPrev = parseBrDate(previsao_start);
+    const dInicio = parseBrDate(data_inicio);      // "não iniciado ainda" vira null
+    const dPrev = parseBrDate(previsao_start);     // "cliente sem previsão..." vira null
 
     return {
       cliente,
@@ -191,7 +188,7 @@ function applyFilters() {
   const useInicio = ui.useInicio.checked;
   const usePrev = ui.usePrev.checked;
 
-  // date inputs são YYYY-MM-DD
+  // inputs date = YYYY-MM-DD
   const inicioDe = ui.inicioDe.value ? new Date(ui.inicioDe.value + "T00:00:00") : null;
   const inicioAte = ui.inicioAte.value ? new Date(ui.inicioAte.value + "T23:59:59") : null;
   const prevDe = ui.prevDe.value ? new Date(ui.prevDe.value + "T00:00:00") : null;
@@ -213,16 +210,15 @@ function applyFilters() {
     }
 
     // filtros de intervalo (pode usar 1 ou 2 ao mesmo tempo)
-    // regra: se marcou ambos, precisa passar em ambos.
     if (useInicio) {
       const d = r.dInicio;
       if (!d) return false;
       if (inicioDe && d < inicioDe) return false;
       if (inicioAte && d > inicioAte) return false;
     }
+
     if (usePrev) {
       const d = r.dPrev;
-      // se previsao_start for texto tipo "Sem previsão de start", dPrev vira null -> não passa
       if (!d) return false;
       if (prevDe && d < prevDe) return false;
       if (prevAte && d > prevAte) return false;
@@ -238,7 +234,6 @@ function applyFilters() {
 // RENDER
 // ===============================
 function renderAll() {
-  // KPIs
   const total = filtered.length;
   const done = filtered.filter((r) => isConcluidoSim(r.concluido)).length;
   const open = total - done;
@@ -259,7 +254,7 @@ function renderAll() {
 
   ui.countInfo.textContent = `Mostrando ${total} de ${rawData.length} registros`;
 
-  // Por implantador (barras)
+  // barras por implantador
   const map = new Map();
   for (const r of filtered) {
     const key = r.implantador || "(Sem implantador)";
@@ -271,7 +266,7 @@ function renderAll() {
   ui.barsImplantador.innerHTML = arr.map(([name, n]) => {
     const pct = Math.round((n / max) * 100);
     return `
-      <div class="barrow" title="${name}">
+      <div class="barrow" title="${escapeHtml(name)}">
         <div class="name">${escapeHtml(name)}</div>
         <div class="bar"><i style="width:${pct}%"></i></div>
         <div class="num">${n}</div>
@@ -279,7 +274,7 @@ function renderAll() {
     `;
   }).join("");
 
-  // Linha do tempo (ordenar por previsão, depois início)
+  // linha do tempo: ordem por previsão, depois início
   const sorted = [...filtered].sort((a,b) => {
     const ap = a.dPrev ? a.dPrev.getTime() : Number.POSITIVE_INFINITY;
     const bp = b.dPrev ? b.dPrev.getTime() : Number.POSITIVE_INFINITY;
@@ -307,29 +302,24 @@ function renderAll() {
   }).join("");
 }
 
-function escapeHtml(s) {
-  return (s ?? "").toString()
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
-
 // ===============================
 // INIT
 // ===============================
 async function init() {
   ui.lastUpdate.textContent = "Carregando dados…";
+  setError("");
 
   try {
-    const data = await fetchData();
-    rawData = normalizeRows(data);
+    const payload = await fetchData();
+    rawData = normalizeRows(payload);
+
     ui.lastUpdate.textContent = `Atualizado: ${new Date().toLocaleString("pt-BR")}`;
 
-    // popula select de implantador
+    // popula implantadores
     const imps = [...new Set(rawData.map(r => r.implantador).filter(Boolean))].sort();
-    ui.fImplantador.innerHTML = `<option value="">Todos</option>` + imps.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join("");
+    ui.fImplantador.innerHTML =
+      `<option value="">Todos</option>` +
+      imps.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join("");
 
     applyFilters();
   } catch (e) {
@@ -356,11 +346,11 @@ function clearFilters() {
 [
   ui.fImplantador, ui.fStatus, ui.fMonthBase, ui.fMonth,
   ui.useInicio, ui.usePrev,
-  ui.inicioDe, ui.inicioAte, ui.prevDe, ui.prevAte, ui.fSearch
+  ui.inicioDe, ui.inicioAte, ui.prevDe, ui.prevAte,
+  ui.fSearch
 ].forEach((x) => x.addEventListener("input", applyFilters));
 
 ui.btnRefresh.addEventListener("click", init);
 ui.btnClear.addEventListener("click", clearFilters);
 
 init();
-
