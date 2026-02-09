@@ -24,7 +24,6 @@
     }
 
     *{box-sizing:border-box}
-
     body{
       margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
       background: radial-gradient(1200px 600px at 20% -10%, rgba(34,197,94,.18), transparent 60%),
@@ -34,23 +33,19 @@
     }
 
     .wrap{max-width:1200px;margin:0 auto;padding:22px 18px 40px}
-
     header{
       display:flex;gap:14px;align-items:center;justify-content:space-between;
-      padding:20px 18px; /* ↑ um pouco mais alto pra logo */
-      margin-bottom:14px;border:1px solid var(--line);
-      border-radius:var(--radius);
-      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      padding:20px 18px;margin-bottom:14px;border:1px solid var(--line);
+      border-radius:var(--radius); background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
       box-shadow: var(--shadow);
     }
-
     .brand{
       display:flex;align-items:center;gap:14px;min-width:260px;
     }
 
     /* ✅ LOGO REAL (REDONDA) */
     .logoImg{
-      width:56px;height:56px; /* ↑ maior */
+      width:56px;height:56px;
       border-radius:999px;
       object-fit:cover;
       border:1px solid rgba(255,255,255,.14);
@@ -65,7 +60,6 @@
     .actions{
       display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end;
     }
-
     .btn{
       cursor:pointer;border:1px solid var(--line); background: rgba(255,255,255,.03);
       color:var(--text); padding:10px 12px; border-radius:14px;
@@ -75,7 +69,6 @@
     }
     .btn:hover{transform: translateY(-1px); background: rgba(255,255,255,.05)}
     .btn.primary{border-color: rgba(34,197,94,.45); background: rgba(34,197,94,.10)}
-
     .badge{
       font-size:12px; color:var(--muted);
       padding:6px 10px;border:1px solid var(--line);border-radius:999px;
@@ -108,8 +101,8 @@
 
     .field label{display:block;font-size:12px;color:var(--muted);margin:0 0 6px}
 
-    /* ✅ inputs/selects com tema escuro + foco visível */
-    select, input{
+    /* ✅ inputs/selects com tema escuro + dropdown legível */
+    select,input{
       width:100%; padding:10px 12px; border-radius:14px;
       border:1px solid var(--line);
       background: rgba(255,255,255,.03);
@@ -118,23 +111,21 @@
       appearance:none;
       -webkit-appearance:none;
       -moz-appearance:none;
-      color-scheme: dark; /* ajuda em date/month */
+      color-scheme: dark;
     }
-
-    select:focus, input:focus{
+    select:focus,input:focus{
       border-color: rgba(6,182,212,.55);
       box-shadow: 0 0 0 3px rgba(6,182,212,.18);
     }
-
-    /* ✅ dropdown options (Chrome/Edge/Firefox costumam respeitar) */
     select option{
-      background: #0f1b2e;
-      color: #e7eefc;
+      background:#0f1b2e;
+      color:#e7eefc;
     }
 
     input[type="checkbox"]{width:auto}
-    .date-box{display:grid; grid-template-columns: 1fr 1fr; gap:8px}
-
+    .date-box{
+      display:grid; grid-template-columns: 1fr 1fr; gap:8px;
+    }
     .checkrow{
       display:flex; align-items:center; gap:10px; flex-wrap:wrap;
       padding:10px 12px; border:1px solid var(--line); border-radius:14px;
@@ -173,7 +164,7 @@
       white-space:nowrap;
     }
 
-    /* barras */
+    /* barras simples */
     .bars{display:grid;gap:10px}
     .barrow{display:grid;grid-template-columns: 160px 1fr 70px; gap:10px; align-items:center}
     .barrow .name{color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -189,6 +180,22 @@
     .barrow .num{font-weight:800;text-align:right}
     .muted{color:var(--muted)}
     .error{color:var(--bad);font-weight:700}
+
+    /* ✅ Botões de ordenação no Dashboard 3 */
+    .sortBtn{
+      margin-left:8px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.03);
+      color: var(--muted);
+      border-radius:10px;
+      padding:2px 8px;
+      cursor:pointer;
+      font-weight:800;
+      font-size:12px;
+      line-height:1;
+    }
+    .sortBtn:hover{ background: rgba(255,255,255,.06); color: var(--text); }
+    .sortBtn.active{ border-color: rgba(6,182,212,.55); color: var(--text); }
   </style>
 </head>
 
@@ -282,6 +289,7 @@
     </section>
 
     <div class="grid" style="margin-top:14px">
+      <!-- Dashboard 1 -->
       <section class="panel">
         <div class="hd">
           <h2>Dashboard 1 • Visão geral</h2>
@@ -315,6 +323,7 @@
         </div>
       </section>
 
+      <!-- Dashboard 2 -->
       <section class="panel">
         <div class="hd">
           <h2>Dashboard 2 • Por implantador</h2>
@@ -325,6 +334,7 @@
         </div>
       </section>
 
+      <!-- Dashboard 3 -->
       <section class="panel">
         <div class="hd">
           <h2>Dashboard 3 • Linha do tempo</h2>
@@ -335,14 +345,14 @@
             <table>
               <thead>
                 <tr>
-                  <th>Cliente</th>
-                  <th>Implantador</th>
-                  <th>Status</th>
-                  <th>Data início</th>
-                  <th>Previsão (Comercial)</th>
-                  <th>Start Real</th>
-                  <th>Passado p/ Suporte</th>
-                  <th>Data Passagem Suporte</th>
+                  <th>Cliente <button class="sortBtn" data-key="cliente" title="Ordenar">⇅</button></th>
+                  <th>Implantador <button class="sortBtn" data-key="implantador" title="Ordenar">⇅</button></th>
+                  <th>Status <button class="sortBtn" data-key="concluido" title="Ordenar">⇅</button></th>
+                  <th>Data início <button class="sortBtn" data-key="data_inicio" title="Ordenar">⇅</button></th>
+                  <th>Previsão (Comercial) <button class="sortBtn" data-key="previsao_start" title="Ordenar">⇅</button></th>
+                  <th>Start Real <button class="sortBtn" data-key="start_real" title="Ordenar">⇅</button></th>
+                  <th>Passado p/ Suporte <button class="sortBtn" data-key="passado_suporte" title="Ordenar">⇅</button></th>
+                  <th>Data Passagem Suporte <button class="sortBtn" data-key="data_passagem_suporte" title="Ordenar">⇅</button></th>
                 </tr>
               </thead>
               <tbody id="tblBody"></tbody>
