@@ -17,9 +17,7 @@
       --shadow: 0 12px 40px rgba(0,0,0,.35);
       --radius: 18px;
     }
-
     *{box-sizing:border-box}
-
     body{
       margin:0;
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
@@ -29,65 +27,35 @@
         var(--bg);
       color:var(--text);
     }
-
     .wrap{max-width:760px;margin:0 auto;padding:22px 18px 40px}
-
     header{
-      display:flex;
-      gap:14px;
-      align-items:center;
-      justify-content:space-between;
-      padding:20px 18px;
-      margin-bottom:16px;
-      border:1px solid var(--line);
+      display:flex;gap:14px;align-items:center;justify-content:space-between;
+      padding:20px 18px;margin-bottom:16px;border:1px solid var(--line);
       border-radius:var(--radius);
       background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
       box-shadow: var(--shadow);
     }
-
     .brand{display:flex;align-items:center;gap:14px}
-
     .logoImg{
-      width:56px;
-      height:56px;
-      border-radius:999px;
-      object-fit:cover;
+      width:56px;height:56px;border-radius:999px;object-fit:cover;
       border:1px solid rgba(255,255,255,.14);
       box-shadow: 0 10px 30px rgba(6,182,212,.16);
       background: rgba(255,255,255,.04);
     }
-
     .title h1{margin:0;font-size:16px}
     .title p{margin:2px 0 0;color:var(--muted);font-size:12px}
-
     .actions{display:flex;gap:10px;align-items:center}
-
     .btn{
-      cursor:pointer;
-      border:1px solid var(--line);
+      cursor:pointer;border:1px solid var(--line);
       background: rgba(255,255,255,.03);
       color:var(--text);
-      padding:10px 14px;
-      border-radius:14px;
-      font-weight:600;
-      font-size:13px;
-      text-decoration:none;
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
+      padding:10px 14px;border-radius:14px;
+      font-weight:600;font-size:13px;text-decoration:none;
+      display:inline-flex;align-items:center;gap:8px;
       transition:.15s ease;
     }
-
-    .btn:hover{
-      transform: translateY(-1px);
-      background: rgba(255,255,255,.05);
-    }
-
-    .btn.primary{
-      border-color: rgba(34,197,94,.45);
-      background: rgba(34,197,94,.14);
-    }
-
+    .btn:hover{transform: translateY(-1px); background: rgba(255,255,255,.05)}
+    .btn.primary{border-color: rgba(34,197,94,.45); background: rgba(34,197,94,.14)}
     .panel{
       border:1px solid var(--line);
       border-radius:var(--radius);
@@ -95,30 +63,15 @@
       box-shadow: var(--shadow);
       overflow:hidden;
     }
-
-    .panel .hd{
-      padding:14px 16px;
-      border-bottom:1px solid var(--line);
-    }
-
+    .panel .hd{padding:14px 16px;border-bottom:1px solid var(--line)}
     .panel .hd h2{margin:0;font-size:14px}
     .panel .hd small{color:var(--muted)}
-
     .panel .bd{padding:18px 16px}
-
     .field{margin-bottom:14px}
-
-    .field label{
-      display:block;
-      font-size:12px;
-      color:var(--muted);
-      margin:0 0 6px;
-    }
-
+    .field label{display:block;font-size:12px;color:var(--muted);margin:0 0 6px}
     input, select{
       width:100%;
-      padding:12px 14px;
-      border-radius:14px;
+      padding:12px 14px;border-radius:14px;
       border:1px solid var(--line);
       background: rgba(255,255,255,.03);
       color:var(--text);
@@ -126,44 +79,19 @@
       color-scheme: dark;
       font-size:14px;
     }
-
     input:focus, select:focus{
       border-color: rgba(6,182,212,.55);
       box-shadow: 0 0 0 3px rgba(6,182,212,.18);
     }
-
-    select option{
-      background:#0f1b2e;
-      color:#e7eefc;
-    }
-
-    .help{
-      font-size:12px;
-      color:var(--muted);
-      margin-top:6px;
-    }
-
+    select option{background:#0f1b2e;color:#e7eefc}
+    .help{font-size:12px;color:var(--muted);margin-top:6px}
     .msg{
-      display:none;
-      margin-top:16px;
-      padding:12px 14px;
-      border-radius:14px;
-      border:1px solid var(--line);
-      background: rgba(255,255,255,.03);
-      white-space:pre-wrap;
-      font-size:13px;
+      display:none;margin-top:16px;padding:12px 14px;border-radius:14px;
+      border:1px solid var(--line);background: rgba(255,255,255,.03);
+      white-space:pre-wrap;font-size:13px;
     }
-
-    .msg.ok{
-      border-color: rgba(34,197,94,.4);
-      color:#c7f9dc;
-    }
-
-    .msg.err{
-      border-color: rgba(251,113,133,.45);
-      color:#ffd1d9;
-    }
-
+    .msg.ok{border-color: rgba(34,197,94,.4); color:#c7f9dc}
+    .msg.err{border-color: rgba(251,113,133,.45); color:#ffd1d9}
     .spin{display:none}
   </style>
 </head>
@@ -171,7 +99,6 @@
 <body>
   <div class="wrap">
 
-    <!-- HEADER -->
     <header>
       <div class="brand">
         <img class="logoImg" src="./yotech.png" alt="YOtech" />
@@ -180,13 +107,11 @@
           <p>Criação automática de pasta + cadastro</p>
         </div>
       </div>
-
       <div class="actions">
         <a class="btn" href="./index.html">← Voltar ao painel</a>
       </div>
     </header>
 
-    <!-- FORM -->
     <section class="panel">
       <div class="hd">
         <h2>Informações básicas</h2>
@@ -194,14 +119,12 @@
       </div>
 
       <div class="bd">
-        <form id="formCliente" autocomplete="off">
-
+        <!-- IMPORTANTÍSSIMO: onsubmit retorna false pra bloquear reload -->
+        <form id="formCliente" autocomplete="off" onsubmit="return false;">
           <div class="field">
             <label>Nome do cliente</label>
             <input id="cliente" required placeholder="Ex: HOSL, Clínica Singular…" />
-            <div class="help">
-              Esse nome será usado na planilha e como nome da pasta no Drive.
-            </div>
+            <div class="help">Esse nome será usado na planilha e como nome da pasta no Drive.</div>
           </div>
 
           <div class="field">
@@ -220,21 +143,124 @@
             </select>
           </div>
 
-          <!-- BOTÃO SUBMIT -->
-          <button type="submit" class="btn primary" style="margin-top:14px;width:100%">
+          <!-- Botão agora é type="button" (NÃO submete form) -->
+          <button type="button" class="btn primary" id="btnSalvar" style="margin-top:14px;width:100%">
             Criar cliente <span class="spin" id="spin">⏳</span>
           </button>
 
-          <!-- MENSAGENS -->
           <div class="msg ok" id="msgOk"></div>
           <div class="msg err" id="msgErr"></div>
-
         </form>
       </div>
     </section>
 
   </div>
 
-  <script src="./novo-cliente.js"></script>
+  <script>
+    // ===============================
+    // CONFIG
+    // ===============================
+    const API_URL = "https://script.google.com/macros/s/AKfycbzLY6WE_XD26ql7phJ_b4VQ7pZLl-eJehG85x7gPZeOwLbqJpUYYthzvBA4x9mMqghu/exec";
+
+    const el = (id) => document.getElementById(id);
+
+    const ui = {
+      form: el("formCliente"),
+      btnSalvar: el("btnSalvar"),
+      spin: el("spin"),
+      msgOk: el("msgOk"),
+      msgErr: el("msgErr"),
+      cliente: el("cliente"),
+      implantador: el("implantador"),
+    };
+
+    function showOk(html) {
+      ui.msgErr.style.display = "none";
+      ui.msgErr.textContent = "";
+      ui.msgOk.style.display = "block";
+      ui.msgOk.innerHTML = html;
+    }
+
+    function showErr(text) {
+      ui.msgOk.style.display = "none";
+      ui.msgOk.textContent = "";
+      ui.msgErr.style.display = "block";
+      ui.msgErr.textContent = text;
+    }
+
+    async function callApiCreateClient(data) {
+      // tenta POST
+      try {
+        const res = await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        });
+        const txt = await res.text();
+        return JSON.parse(txt);
+      } catch (e) {
+        // fallback GET
+        const qs = new URLSearchParams();
+        qs.set("action", "createClient");
+        qs.set("payload", JSON.stringify(data));
+        const url = API_URL + "?" + qs.toString();
+
+        const res = await fetch(url);
+        if (!res.ok) throw new Error("Falha ao chamar API (fallback GET).");
+        return await res.json();
+      }
+    }
+
+    function collect() {
+      return {
+        action: "createClient",
+        cliente: (ui.cliente.value || "").trim(),
+        implantador: (ui.implantador.value || "").trim(),
+        // defaults
+        concluido: "Não",
+        data_inicio: "",
+        previsao_start: "",
+        start_real: "",
+        passado_suporte: "",
+        data_passagem_suporte: "",
+        obs: "",
+      };
+    }
+
+    async function onSave() {
+      ui.msgOk.style.display = "none";
+      ui.msgErr.style.display = "none";
+
+      const data = collect();
+      if (!data.cliente) return showErr("Informe o nome do cliente.");
+      if (!data.implantador) return showErr("Selecione o implantador.");
+
+      ui.btnSalvar.disabled = true;
+      ui.spin.style.display = "inline";
+
+      try {
+        const resp = await callApiCreateClient(data);
+        if (!resp || resp.ok !== true) throw new Error(resp?.error || "Erro ao criar cliente.");
+
+        showOk(`
+          ✅ <b>Cliente criado com sucesso!</b><br>
+          📁 <a href="${resp.pasta_url}" target="_blank" style="color:#22c55e;font-weight:800;text-decoration:none">
+            Abrir pasta no Drive
+          </a><br>
+          <span style="opacity:.85">Linha na planilha: ${resp.linha ?? "-"}</span>
+        `);
+
+        // opcional: limpar
+        // ui.form.reset();
+      } catch (err) {
+        showErr(String(err.message || err));
+      } finally {
+        ui.btnSalvar.disabled = false;
+        ui.spin.style.display = "none";
+      }
+    }
+
+    ui.btnSalvar.addEventListener("click", onSave);
+  </script>
 </body>
 </html>
