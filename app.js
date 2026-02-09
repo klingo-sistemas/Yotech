@@ -17,7 +17,7 @@ function parseBrDate(str) {
   const s = str.trim();
   if (!/^\d{2}\/\d{2}\/\d{4}$/.test(s)) return null;
   const [dd, mm, yyyy] = s.split("/").map(Number);
-  const d = new Date(yyyy, mm - 1, dd); // sem ISO pra evitar timezone bug
+  const d = new Date(yyyy, mm - 1, dd);
   return Number.isNaN(d.getTime()) ? null : d;
 }
 
@@ -51,13 +51,11 @@ function escapeHtml(s) {
 async function fetchData() {
   setError("");
 
-  // tentativa fetch normal
   try {
     const res = await fetch(API_URL, { method: "GET" });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return await res.json();
   } catch (_) {
-    // fallback JSONP
     return await fetchJsonp(`${API_URL}?callback=__cb`);
   }
 }
@@ -112,11 +110,11 @@ const ui = {
   fMonthBase: el("fMonthBase"),
   fMonth: el("fMonth"),
   useInicio: el("useInicio"),
-  usePrev: el("usePrev"),
+  useStartReal: el("useStartReal"), // era usePrev
   inicioDe: el("inicioDe"),
   inicioAte: el("inicioAte"),
-  prevDe: el("prevDe"),
-  prevAte: el("prevAte"),
+  startRealDe: el("startRealDe"),   // era prevDe
+  startRealAte: el("startRealAte"), // era prevAte
   fSearch: el("fSearch"),
 
   kTotal: el("kTotal"),
@@ -141,11 +139,7 @@ function setError(msg) {
 }
 
 // ===============================
-// ✅ NORMALIZE API DATA (corrigido)
-// Aceita:
-// - Array direto: [{...}]
-// - { ok:true, data:[{...}] }
-// - { ok:true, data:{ data:[{...}] } } (caso alguma versão tenha aninhado)
+// NORMALIZE API DATA
 // ===============================
 function normalizeRows(payload) {
   console.log("PAYLOAD DA API:", payload);
@@ -169,17 +163,31 @@ function normalizeRows(payload) {
     const cliente = strNorm(r.cliente);
     const implantador = strNorm(r.implantador);
     const concluido = strNorm(r.concluido);
+
     const data_inicio = strNorm(r.data_inicio);
-    const previsao_start = strNorm(r.previsao_start);
+    const previsao_start = strNorm(r.previsao_start); // comercial
+    const start_real = strNorm(r.start_real);         // real
+    const passado_suporte = strNorm(r.passado_suporte);
+    const data_passagem_suporte = strNorm(r.data_passagem_suporte);
 
     return {
       cliente,
       implantador,
       concluido,
+
       data_inicio,
       previsao_start,
+      start_real,
+      passado_suporte,
+      data_passagem_suporte,
+
       dInicio: parseBrDate(data_inicio),
-      dPrev: parseBrDate(previsao_start),
+
+      // ✅ agora o “filtro previsão/start” usa Start Real
+      dStartReal: parseBrDate(start_real),
+
+      // mantenho também a data do comercial, se você quiser usar depois
+      dPrevComercial: parseBrDate(previsao_start),
     };
   });
 }
@@ -192,17 +200,19 @@ function applyFilters() {
   const st = ui.fStatus.value;
   const search = ui.fSearch.value.trim().toLowerCase();
 
-  const monthBase = ui.fMonthBase.value; // previsao_start | data_inicio
+  // agora base do mês: start_real | data_inicio
+  const monthBase = ui.fMonthBase.value; // start_real | data_inicio
   const ym = ui.fMonth.value; // YYYY-MM
 
   const useInicio = ui.useInicio.checked;
-  const usePrev = ui.usePrev.checked;
+  const useStartReal = ui.useStartReal.checked;
 
   // inputs date = YYYY-MM-DD
   const inicioDe = ui.inicioDe.value ? new Date(ui.inicioDe.value + "T00:00:00") : null;
   const inicioAte = ui.inicioAte.value ? new Date(ui.inicioAte.value + "T23:59:59") : null;
-  const prevDe = ui.prevDe.value ? new Date(ui.prevDe.value + "T00:00:00") : null;
-  const prevAte = ui.prevAte.value ? new Date(ui.prevAte.value + "T23:59:59") : null;
+
+  const srDe = ui.startRealDe.value ? new Date(ui.startRealDe.value + "T00:00:00") : null;
+  const srAte = ui.startRealAte.value ? new Date(ui.startRealAte.value + "T23:59:59") : null;
 
   filtered = rawData.filter((r) => {
     if (imp && r.implantador !== imp) return false;
@@ -214,7 +224,7 @@ function applyFilters() {
     }
 
     if (ym) {
-      const baseDate = (monthBase === "data_inicio") ? r.dInicio : r.dPrev;
+      const baseDate = (monthBase === "data_inicio") ? r.dInicio : r.dStartReal;
       if (!sameMonthYear(baseDate, ym)) return false;
     }
 
@@ -225,11 +235,11 @@ function applyFilters() {
       if (inicioAte && d > inicioAte) return false;
     }
 
-    if (usePrev) {
-      const d = r.dPrev;
+    if (useStartReal) {
+      const d = r.dStartReal;
       if (!d) return false;
-      if (prevDe && d < prevDe) return false;
-      if (prevAte && d > prevAte) return false;
+      if (srDe && d < srDe) return false;
+      if (srAte && d > srAte) return false;
     }
 
     return true;
@@ -249,10 +259,13 @@ function renderAll() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
+  // ⚠️ “Atrasadas”: mantive a lógica antiga,
+  // mas agora baseada no Start Real (quando existir).
+  // Se preferir manter “atraso” baseado na previsão comercial, eu troco depois.
   const late = filtered.filter((r) => {
     if (isConcluidoSim(r.concluido)) return false;
-    if (!r.dPrev) return false;
-    return r.dPrev < today;
+    if (!r.dStartReal) return false;
+    return r.dStartReal < today;
   }).length;
 
   ui.kTotal.textContent = total;
@@ -284,8 +297,8 @@ function renderAll() {
 
   // linha do tempo
   const sorted = [...filtered].sort((a, b) => {
-    const ap = a.dPrev ? a.dPrev.getTime() : Number.POSITIVE_INFINITY;
-    const bp = b.dPrev ? b.dPrev.getTime() : Number.POSITIVE_INFINITY;
+    const ap = a.dStartReal ? a.dStartReal.getTime() : Number.POSITIVE_INFINITY;
+    const bp = b.dStartReal ? b.dStartReal.getTime() : Number.POSITIVE_INFINITY;
     if (ap !== bp) return ap - bp;
 
     const ai = a.dInicio ? a.dInicio.getTime() : Number.POSITIVE_INFINITY;
@@ -305,6 +318,9 @@ function renderAll() {
         <td>${pill}</td>
         <td>${escapeHtml(r.data_inicio || "-")}</td>
         <td>${escapeHtml(r.previsao_start || "-")}</td>
+        <td>${escapeHtml(r.start_real || "-")}</td>
+        <td>${escapeHtml(r.passado_suporte || "-")}</td>
+        <td>${escapeHtml(r.data_passagem_suporte || "-")}</td>
       </tr>
     `;
   }).join("");
@@ -338,22 +354,25 @@ async function init() {
 function clearFilters() {
   ui.fImplantador.value = "";
   ui.fStatus.value = "";
-  ui.fMonthBase.value = "previsao_start";
+  ui.fMonthBase.value = "start_real";
   ui.fMonth.value = "";
+
   ui.useInicio.checked = true;
-  ui.usePrev.checked = true;
+  ui.useStartReal.checked = true;
+
   ui.inicioDe.value = "";
   ui.inicioAte.value = "";
-  ui.prevDe.value = "";
-  ui.prevAte.value = "";
+  ui.startRealDe.value = "";
+  ui.startRealAte.value = "";
+
   ui.fSearch.value = "";
   applyFilters();
 }
 
 [
   ui.fImplantador, ui.fStatus, ui.fMonthBase, ui.fMonth,
-  ui.useInicio, ui.usePrev,
-  ui.inicioDe, ui.inicioAte, ui.prevDe, ui.prevAte,
+  ui.useInicio, ui.useStartReal,
+  ui.inicioDe, ui.inicioAte, ui.startRealDe, ui.startRealAte,
   ui.fSearch
 ].forEach((x) => x.addEventListener("input", applyFilters));
 
