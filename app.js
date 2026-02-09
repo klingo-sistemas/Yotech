@@ -10,6 +10,68 @@ let rawData = [];
 let filtered = [];
 
 // ===============================
+// SORT (Dashboard 3)
+// ===============================
+let sortKey = null;
+let sortDir = 1; // 1 asc | -1 desc
+
+function cmp(a, b) {
+  if (a == null && b == null) return 0;
+  if (a == null) return 1;
+  if (b == null) return -1;
+  if (typeof a === "number" && typeof b === "number") return a - b;
+  return String(a).localeCompare(String(b), "pt-BR", { sensitivity: "base" });
+}
+
+function getSortValue(r, key) {
+  switch (key) {
+    case "cliente": return (r.cliente || "").toLowerCase();
+    case "implantador": return (r.implantador || "").toLowerCase();
+
+    case "concluido": // Status
+      return isConcluidoSim(r.concluido) ? 1 : 0;
+
+    case "data_inicio":
+      return r.dInicio ? r.dInicio.getTime() : null;
+
+    case "previsao_start":
+      return r.dPrevComercial ? r.dPrevComercial.getTime() : null;
+
+    case "start_real":
+      return r.dStartReal ? r.dStartReal.getTime() : null;
+
+    case "passado_suporte":
+      return (r.passado_suporte || "").toLowerCase();
+
+    case "data_passagem_suporte":
+      return r.dPassSuporte ? r.dPassSuporte.getTime() : null;
+
+    default:
+      return (r[key] ?? "").toString().toLowerCase();
+  }
+}
+
+function updateSortButtons() {
+  document.querySelectorAll(".sortBtn").forEach(btn => {
+    const key = btn.dataset.key;
+    btn.classList.toggle("active", key === sortKey);
+    if (key !== sortKey) btn.textContent = "⇅";
+    else btn.textContent = sortDir === 1 ? "▲" : "▼";
+  });
+}
+
+function hookSortButtons() {
+  document.querySelectorAll(".sortBtn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const key = btn.dataset.key;
+      if (sortKey === key) sortDir *= -1; // inverte
+      else { sortKey = key; sortDir = 1; }
+      renderAll();
+    });
+  });
+}
+
+// ===============================
 // HELPERS - datas (DD/MM/YYYY) estáveis
 // ===============================
 function parseBrDate(str) {
@@ -110,11 +172,11 @@ const ui = {
   fMonthBase: el("fMonthBase"),
   fMonth: el("fMonth"),
   useInicio: el("useInicio"),
-  useStartReal: el("useStartReal"), // era usePrev
+  useStartReal: el("useStartReal"),
   inicioDe: el("inicioDe"),
   inicioAte: el("inicioAte"),
-  startRealDe: el("startRealDe"),   // era prevDe
-  startRealAte: el("startRealAte"), // era prevAte
+  startRealDe: el("startRealDe"),
+  startRealAte: el("startRealAte"),
   fSearch: el("fSearch"),
 
   kTotal: el("kTotal"),
@@ -165,10 +227,15 @@ function normalizeRows(payload) {
     const concluido = strNorm(r.concluido);
 
     const data_inicio = strNorm(r.data_inicio);
-    const previsao_start = strNorm(r.previsao_start); // comercial
-    const start_real = strNorm(r.start_real);         // real
+    const previsao_start = strNorm(r.previsao_start);
+    const start_real = strNorm(r.start_real);
     const passado_suporte = strNorm(r.passado_suporte);
     const data_passagem_suporte = strNorm(r.data_passagem_suporte);
+
+    const dInicio = parseBrDate(data_inicio);
+    const dStartReal = parseBrDate(start_real);
+    const dPrevComercial = parseBrDate(previsao_start);
+    const dPassSuporte = parseBrDate(data_passagem_suporte);
 
     return {
       cliente,
@@ -181,13 +248,10 @@ function normalizeRows(payload) {
       passado_suporte,
       data_passagem_suporte,
 
-      dInicio: parseBrDate(data_inicio),
-
-      // ✅ agora o “filtro previsão/start” usa Start Real
-      dStartReal: parseBrDate(start_real),
-
-      // mantenho também a data do comercial, se você quiser usar depois
-      dPrevComercial: parseBrDate(previsao_start),
+      dInicio,
+      dStartReal,
+      dPrevComercial,
+      dPassSuporte,
     };
   });
 }
@@ -200,14 +264,12 @@ function applyFilters() {
   const st = ui.fStatus.value;
   const search = ui.fSearch.value.trim().toLowerCase();
 
-  // agora base do mês: start_real | data_inicio
   const monthBase = ui.fMonthBase.value; // start_real | data_inicio
   const ym = ui.fMonth.value; // YYYY-MM
 
   const useInicio = ui.useInicio.checked;
   const useStartReal = ui.useStartReal.checked;
 
-  // inputs date = YYYY-MM-DD
   const inicioDe = ui.inicioDe.value ? new Date(ui.inicioDe.value + "T00:00:00") : null;
   const inicioAte = ui.inicioAte.value ? new Date(ui.inicioAte.value + "T23:59:59") : null;
 
@@ -259,9 +321,7 @@ function renderAll() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  // ⚠️ “Atrasadas”: mantive a lógica antiga,
-  // mas agora baseada no Start Real (quando existir).
-  // Se preferir manter “atraso” baseado na previsão comercial, eu troco depois.
+  // “Atrasadas” baseado no Start Real
   const late = filtered.filter((r) => {
     if (isConcluidoSim(r.concluido)) return false;
     if (!r.dStartReal) return false;
@@ -296,15 +356,24 @@ function renderAll() {
   }).join("");
 
   // linha do tempo
-  const sorted = [...filtered].sort((a, b) => {
-    const ap = a.dStartReal ? a.dStartReal.getTime() : Number.POSITIVE_INFINITY;
-    const bp = b.dStartReal ? b.dStartReal.getTime() : Number.POSITIVE_INFINITY;
-    if (ap !== bp) return ap - bp;
+  let sorted = [...filtered];
 
-    const ai = a.dInicio ? a.dInicio.getTime() : Number.POSITIVE_INFINITY;
-    const bi = b.dInicio ? b.dInicio.getTime() : Number.POSITIVE_INFINITY;
-    return ai - bi;
-  });
+  if (sortKey) {
+    sorted.sort((a, b) => sortDir * cmp(getSortValue(a, sortKey), getSortValue(b, sortKey)));
+  } else {
+    // padrão: Start Real, depois início
+    sorted.sort((a, b) => {
+      const ap = a.dStartReal ? a.dStartReal.getTime() : Number.POSITIVE_INFINITY;
+      const bp = b.dStartReal ? b.dStartReal.getTime() : Number.POSITIVE_INFINITY;
+      if (ap !== bp) return ap - bp;
+
+      const ai = a.dInicio ? a.dInicio.getTime() : Number.POSITIVE_INFINITY;
+      const bi = b.dInicio ? b.dInicio.getTime() : Number.POSITIVE_INFINITY;
+      return ai - bi;
+    });
+  }
+
+  updateSortButtons();
 
   ui.tblBody.innerHTML = sorted.map((r) => {
     const pill = isConcluidoSim(r.concluido)
@@ -344,6 +413,10 @@ async function init() {
       `<option value="">Todos</option>` +
       imps.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join("");
 
+    // ✅ ativa os botões de ordenação
+    hookSortButtons();
+    updateSortButtons();
+
     applyFilters();
   } catch (e) {
     ui.lastUpdate.textContent = "Erro ao carregar";
@@ -366,6 +439,11 @@ function clearFilters() {
   ui.startRealAte.value = "";
 
   ui.fSearch.value = "";
+
+  // (opcional) resetar ordenação ao limpar filtros
+  sortKey = null;
+  sortDir = 1;
+
   applyFilters();
 }
 
