@@ -43,7 +43,6 @@
       display:flex;align-items:center;gap:14px;min-width:260px;
     }
 
-    /* ✅ LOGO REAL (REDONDA) */
     .logoImg{
       width:56px;height:56px;
       border-radius:999px;
@@ -66,6 +65,7 @@
       font-weight:600; font-size:13px;
       display:flex; align-items:center; gap:8px;
       transition: .15s ease;
+      text-decoration:none;
     }
     .btn:hover{transform: translateY(-1px); background: rgba(255,255,255,.05)}
     .btn.primary{border-color: rgba(34,197,94,.45); background: rgba(34,197,94,.10)}
@@ -101,7 +101,6 @@
 
     .field label{display:block;font-size:12px;color:var(--muted);margin:0 0 6px}
 
-    /* ✅ inputs/selects com tema escuro + dropdown legível */
     select,input{
       width:100%; padding:10px 12px; border-radius:14px;
       border:1px solid var(--line);
@@ -122,19 +121,24 @@
       color:#e7eefc;
     }
 
-    input[type="checkbox"]{width:auto}
     .date-box{
       display:grid; grid-template-columns: 1fr 1fr; gap:8px;
     }
-    .checkrow{
-      display:flex; align-items:center; gap:10px; flex-wrap:wrap;
-      padding:10px 12px; border:1px solid var(--line); border-radius:14px;
+
+    /* ✅ checkbox estilizado */
+    .checkPill{
+      display:flex; align-items:center; gap:10px;
+      padding:10px 12px;
+      border:1px solid var(--line);
+      border-radius:14px;
       background: rgba(255,255,255,.03);
+      min-height:44px;
     }
-    .checkrow span{color:var(--muted);font-size:12px}
+    .checkPill input{width:auto}
+    .checkPill .hint{color:var(--muted);font-size:12px}
 
     /* KPIs */
-    .kpis{display:grid;grid-template-columns: repeat(4, 1fr); gap:12px}
+    .kpis{display:grid;grid-template-columns: repeat(5, 1fr); gap:12px}
     @media (max-width: 980px){ .kpis{grid-template-columns: repeat(2, 1fr);} }
     @media (max-width: 520px){ .kpis{grid-template-columns: 1fr;} }
 
@@ -149,6 +153,7 @@
     .dot.good{background:var(--good)}
     .dot.warn{background:var(--warn)}
     .dot.bad{background:var(--bad)}
+    .dot.info{background:var(--brand2)}
 
     /* tabela */
     table{width:100%;border-collapse:collapse}
@@ -178,10 +183,10 @@
       width:0%;
     }
     .barrow .num{font-weight:800;text-align:right}
+
     .muted{color:var(--muted)}
     .error{color:var(--bad);font-weight:700}
 
-    /* ✅ Botões de ordenação no Dashboard 3 */
     .sortBtn{
       margin-left:8px;
       border:1px solid var(--line);
@@ -203,11 +208,10 @@
   <div class="wrap">
     <header>
       <div class="brand">
-        <!-- ✅ Troque o nome do arquivo se necessário -->
         <img class="logoImg" src="./yotech.png" alt="YOtech" />
         <div class="title">
           <h1>Gestão de Implantações</h1>
-          <p>Yotech • Painel gerencial </p>
+          <p>Yotech • Painel gerencial</p>
         </div>
       </div>
 
@@ -237,31 +241,10 @@
             <label>Status</label>
             <select id="fStatus">
               <option value="">Todos</option>
-              <option value="Sim">Concluído</option>
-              <option value="Não">Em andamento</option>
+              <option value="suporte">Passado para suporte</option>
+              <option value="concluido">Concluído</option>
+              <option value="andamento">Em andamento</option>
             </select>
-          </div>
-
-          <div class="field">
-            <label>Mês/Ano (baseado em:)</label>
-            <select id="fMonthBase">
-              <option value="start_real">Start Real</option>
-              <option value="data_inicio">Data de início</option>
-            </select>
-          </div>
-
-          <div class="field">
-            <label>Mês/Ano</label>
-            <input id="fMonth" type="month" />
-          </div>
-
-          <div class="field">
-            <label>Filtro por datas (marque o(s) tipo(s))</label>
-            <div class="checkrow">
-              <label><input type="checkbox" id="useInicio" checked /> Data de início</label>
-              <label><input type="checkbox" id="useStartReal" checked /> Start Real</label>
-              <span>(se marcar os 2, aplica os 2 juntos)</span>
-            </div>
           </div>
 
           <div class="field">
@@ -284,6 +267,17 @@
             <label>Buscar (cliente)</label>
             <input id="fSearch" type="text" placeholder="Ex: HOSL, CDC…" />
           </div>
+
+          <div class="field">
+            <label>Start Real</label>
+            <div class="checkPill">
+              <label style="display:flex;align-items:center;gap:10px;margin:0">
+                <input type="checkbox" id="onlyNoStartReal" />
+                <span>Somente sem Start Real</span>
+              </label>
+              <span class="hint">(sem previsão / sem start real)</span>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -305,12 +299,17 @@
             <div class="kpi">
               <div class="t">Concluídas</div>
               <div class="v" id="kDone">0</div>
-              <div class="s"><span class="dot good"></span>Status “Sim”</div>
+              <div class="s"><span class="dot good"></span>Concluído</div>
             </div>
             <div class="kpi">
               <div class="t">Em andamento</div>
               <div class="v" id="kOpen">0</div>
-              <div class="s"><span class="dot warn"></span>Status “Não”</div>
+              <div class="s"><span class="dot warn"></span>Não concluído</div>
+            </div>
+            <div class="kpi">
+              <div class="t">Passados p/ suporte</div>
+              <div class="v" id="kSupport">0</div>
+              <div class="s"><span class="dot info"></span>Flag “Passado p/ Suporte”</div>
             </div>
             <div class="kpi">
               <div class="t">Atrasadas</div>
@@ -346,12 +345,11 @@
                 <tr>
                   <th>Cliente <button class="sortBtn" data-key="cliente" title="Ordenar">⇅</button></th>
                   <th>Implantador <button class="sortBtn" data-key="implantador" title="Ordenar">⇅</button></th>
-                  <th>Status <button class="sortBtn" data-key="concluido" title="Ordenar">⇅</button></th>
+                  <th>Status <button class="sortBtn" data-key="status_label" title="Ordenar">⇅</button></th>
                   <th>Data início <button class="sortBtn" data-key="data_inicio" title="Ordenar">⇅</button></th>
                   <th>Previsão (Comercial) <button class="sortBtn" data-key="previsao_start" title="Ordenar">⇅</button></th>
                   <th>Start Real <button class="sortBtn" data-key="start_real" title="Ordenar">⇅</button></th>
                   <th>Passado p/ Suporte <button class="sortBtn" data-key="passado_suporte" title="Ordenar">⇅</button></th>
-                  <th>Data Passagem Suporte <button class="sortBtn" data-key="data_passagem_suporte" title="Ordenar">⇅</button></th>
                 </tr>
               </thead>
               <tbody id="tblBody"></tbody>
@@ -365,7 +363,3 @@
   <script src="./app.js"></script>
 </body>
 </html>
-
-
-
-
