@@ -135,7 +135,6 @@
       min-height:44px;
     }
     .checkPill input{width:auto}
-    .checkPill .hint{color:var(--muted);font-size:12px}
 
     /* KPIs */
     .kpis{display:grid;grid-template-columns: repeat(5, 1fr); gap:12px}
@@ -160,16 +159,7 @@
     th,td{padding:10px 10px;border-bottom:1px solid var(--line);font-size:13px}
     th{color:var(--muted);text-align:left;font-weight:700;white-space:nowrap}
     tr:hover td{background: rgba(255,255,255,.02)}
-    .pill{
-      display:inline-flex; align-items:center; gap:8px;
-      padding:6px 10px; border-radius:999px;
-      border:1px solid var(--line);
-      background: rgba(255,255,255,.03);
-      font-size:12px; color:var(--text);
-      white-space:nowrap;
-    }
 
-    /* barras simples */
     .bars{display:grid;gap:10px}
     .barrow{display:grid;grid-template-columns: 160px 1fr 70px; gap:10px; align-items:center}
     .barrow .name{color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -244,7 +234,6 @@
               <option value="suporte">Passado para suporte</option>
               <option value="concluido">Startados</option>
               <option value="andamento">Em andamento</option>
-              <!-- ✅ NOVO -->
               <option value="suspenso">Suspenso</option>
             </select>
           </div>
@@ -274,12 +263,20 @@
             <div class="checkPill">
               <label style="display:flex;align-items:center;gap:10px;margin:0">
                 <input type="checkbox" id="onlyNoStartReal" />
-                <span>Clique para visualizar clientes sem data de start</span>
+                <span>Clientes sem data de start</span>
               </label>
             </div>
           </div>
 
-          <!-- ✅ NOVA FLAG (padrão desmarcada) -->
+          <div class="field">
+            <div class="checkPill">
+              <label style="display:flex;align-items:center;gap:10px;margin:0">
+                <input type="checkbox" id="onlyTermoSim" />
+                <span>Somente Termo ✅ (Sim)</span>
+              </label>
+            </div>
+          </div>
+
           <div class="field">
             <div class="checkPill">
               <label style="display:flex;align-items:center;gap:10px;margin:0">
@@ -354,20 +351,18 @@
             <table>
               <thead>
                 <tr>
-                  <th>Cliente <button class="sortBtn" data-key="cliente" title="Ordenar">⇅</button></th>
-                  <th>Implantador <button class="sortBtn" data-key="implantador" title="Ordenar">⇅</button></th>
-                  <th>Status <button class="sortBtn" data-key="status_label" title="Ordenar">⇅</button></th>
-                  <th>Data início <button class="sortBtn" data-key="data_inicio" title="Ordenar">⇅</button></th>
-                  <th>Previsão (Comercial) <button class="sortBtn" data-key="previsao_start" title="Ordenar">⇅</button></th>
-                  <th>Start Real <button class="sortBtn" data-key="start_real" title="Ordenar">⇅</button></th>
-
-                  <!-- ✅ NOVAS COLUNAS (Dash 3) -->
-                  <th>Termo <button class="sortBtn" data-key="termo_encerramento" title="Ordenar">⇅</button></th>
-                  <th>Passado p/ Suporte <button class="sortBtn" data-key="passado_suporte" title="Ordenar">⇅</button></th>
-                  <th>Comercial <button class="sortBtn" data-key="comercial" title="Ordenar">⇅</button></th>
-                  <th>Tam. <button class="sortBtn" data-key="tamanho_cliente" title="Ordenar">⇅</button></th>
-                  <th>Base <button class="sortBtn" data-key="link_base" title="Ordenar">⇅</button></th>
-                  <th>Email <button class="sortBtn" data-key="email_enviado" title="Ordenar">⇅</button></th>
+                  <th>Cliente</th>
+                  <th>Implantador</th>
+                  <th>Status</th>
+                  <th>Data início</th>
+                  <th>Previsão (Comercial)</th>
+                  <th>Start Real</th>
+                  <th>Termo</th>
+                  <th>Passado p/ Suporte</th>
+                  <th>Comercial</th>
+                  <th>Tam.</th>
+                  <th>Base</th>
+                  <th>Email</th>
                 </tr>
               </thead>
               <tbody id="tblBody"></tbody>
