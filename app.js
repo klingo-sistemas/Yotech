@@ -9,6 +9,9 @@ const API_URL = "https://script.google.com/macros/s/AKfycbzLY6WE_XD26ql7phJ_b4VQ
 let rawData = [];
 let filtered = [];
 
+// Ordenação
+let sortState = { key: "start_real", dir: "asc" };
+
 // ===============================
 // HELPERS
 // ===============================
@@ -58,6 +61,8 @@ function isNoStartRealText(v) {
 // JSONP fallback (pra evitar CORS)
 // ===============================
 async function fetchData() {
+  setError("");
+
   try {
     const res = await fetch(API_URL, { method: "GET" });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -182,6 +187,7 @@ function normalizeRows(payload) {
     const dInicio = parseBrDate(data_inicio);
     const dStartReal = parseBrDate(start_real);
 
+    // Status label
     let status_label = "Em andamento";
     if (isSuspenso(concluido)) status_label = "Suspenso";
     else if (isSim(passado_suporte)) status_label = "Passado para suporte";
@@ -207,6 +213,62 @@ function normalizeRows(payload) {
       status_label,
       noStartReal: !dStartReal || isNoStartRealText(start_real),
     };
+  });
+}
+
+// ===============================
+// SORT
+// ===============================
+function compareAny(a, b) {
+  if (a === b) return 0;
+  if (a === null || a === undefined || a === "") return 1;
+  if (b === null || b === undefined || b === "") return -1;
+  return String(a).localeCompare(String(b), "pt-BR", { numeric: true, sensitivity: "base" });
+}
+
+function applySort(list) {
+  const { key, dir } = sortState;
+
+  const getVal = (r) => {
+    // Datas ordenam por timestamp
+    if (key === "data_inicio") return r.dInicio ? r.dInicio.getTime() : Number.POSITIVE_INFINITY;
+    if (key === "start_real") return r.dStartReal ? r.dStartReal.getTime() : Number.POSITIVE_INFINITY;
+
+    // Normal
+    return r[key];
+  };
+
+  const mult = dir === "asc" ? 1 : -1;
+
+  return [...list].sort((ra, rb) => {
+    const va = getVal(ra);
+    const vb = getVal(rb);
+
+    if (typeof va === "number" && typeof vb === "number") return (va - vb) * mult;
+    return compareAny(va, vb) * mult;
+  });
+}
+
+function bindSortButtons() {
+  document.querySelectorAll(".sortBtn").forEach((btn) => {
+    // só bind em botões com data-key
+    const key = btn.getAttribute("data-key");
+    if (!key) return;
+
+    btn.addEventListener("click", () => {
+      if (sortState.key === key) {
+        sortState.dir = sortState.dir === "asc" ? "desc" : "asc";
+      } else {
+        sortState.key = key;
+        sortState.dir = "asc";
+      }
+
+      // destaque visual do botão ativo
+      document.querySelectorAll(".sortBtn").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+
+      renderAll(); // re-render já ordenado
+    });
   });
 }
 
@@ -284,6 +346,16 @@ function renderAll() {
   ui.kOpen.textContent = open;
   ui.kSupport.textContent = support;
 
+  // atrasadas (mantive sua lógica original)
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const late = filtered.filter((r) => {
+    if (r.status_label === "Concluído") return false;
+    if (!r.dStartReal) return false;
+    return r.dStartReal < today;
+  }).length;
+  ui.kLate.textContent = late;
+
   ui.countInfo.textContent = `Mostrando ${total} de ${rawData.length} registros`;
 
   // barras por implantador
@@ -306,8 +378,10 @@ function renderAll() {
     `;
   }).join("");
 
-  // tabela
-  ui.tblBody.innerHTML = filtered.map((r) => {
+  // tabela ordenada
+  const sorted = applySort(filtered);
+
+  ui.tblBody.innerHTML = sorted.map((r) => {
     const termoIcon = isSim(r.termo_encerramento) ? "✅" : "⬜";
     const emailIcon = isSim(r.email_enviado) ? "📧✅" : "📧⬜";
 
@@ -350,7 +424,7 @@ async function init() {
 
     ui.lastUpdate.textContent = `Atualizado: ${new Date().toLocaleString("pt-BR")}`;
 
-    // ✅ POPULA IMPLANTADORES (corrige "só Todos")
+    // ✅ dropdown implantadores
     const imps = [...new Set(rawData.map(r => (r.implantador || "").trim()).filter(Boolean))]
       .sort((a, b) => a.localeCompare(b, "pt-BR", { sensitivity: "base" }));
 
@@ -358,7 +432,11 @@ async function init() {
       `<option value="">Todos</option>` +
       imps.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join("");
 
+    // aplica filtros iniciais
     applyFilters();
+
+    // bind sort (precisa existir depois do HTML estar carregado)
+    bindSortButtons();
   } catch (e) {
     ui.lastUpdate.textContent = "Erro ao carregar";
     setError(e.message || String(e));
@@ -375,8 +453,7 @@ function clearFilters() {
   ui.fSearch.value = "";
   ui.onlyNoStartReal.checked = false;
   ui.onlyTermoSim.checked = false;
-  ui.showSuspensos.checked = false; // ✅ padrão OFF
-
+  ui.showSuspensos.checked = false; // padrão OFF
   applyFilters();
 }
 
