@@ -58,7 +58,7 @@ function isNoStartRealText(v) {
 }
 
 // ===============================
-// JSONP fallback (pra evitar CORS)
+// JSONP fallback
 // ===============================
 async function fetchData() {
   setError("");
@@ -230,11 +230,8 @@ function applySort(list) {
   const { key, dir } = sortState;
 
   const getVal = (r) => {
-    // Datas ordenam por timestamp
     if (key === "data_inicio") return r.dInicio ? r.dInicio.getTime() : Number.POSITIVE_INFINITY;
     if (key === "start_real") return r.dStartReal ? r.dStartReal.getTime() : Number.POSITIVE_INFINITY;
-
-    // Normal
     return r[key];
   };
 
@@ -249,28 +246,31 @@ function applySort(list) {
   });
 }
 
-function bindSortButtons() {
-  document.querySelectorAll(".sortBtn").forEach((btn) => {
-    // só bind em botões com data-key
-    const key = btn.getAttribute("data-key");
-    if (!key) return;
+// ✅ EVENT DELEGATION: sempre funciona
+document.addEventListener("click", (e) => {
+  const btn = e.target.closest(".sortBtn[data-key]");
+  if (!btn) return;
 
-    btn.addEventListener("click", () => {
-      if (sortState.key === key) {
-        sortState.dir = sortState.dir === "asc" ? "desc" : "asc";
-      } else {
-        sortState.key = key;
-        sortState.dir = "asc";
-      }
+  const key = btn.getAttribute("data-key");
+  if (!key) return;
 
-      // destaque visual do botão ativo
-      document.querySelectorAll(".sortBtn").forEach((b) => b.classList.remove("active"));
-      btn.classList.add("active");
+  if (sortState.key === key) {
+    sortState.dir = sortState.dir === "asc" ? "desc" : "asc";
+  } else {
+    sortState.key = key;
+    sortState.dir = "asc";
+  }
 
-      renderAll(); // re-render já ordenado
-    });
-  });
-}
+  document.querySelectorAll(".sortBtn").forEach((b) => b.classList.remove("active"));
+  btn.classList.add("active");
+
+  // debug visual no topo (ajuda a confirmar que clicou)
+  if (ui.lastUpdate) {
+    ui.lastUpdate.textContent = `Ordenando por: ${key} (${sortState.dir}) • ${new Date().toLocaleString("pt-BR")}`;
+  }
+
+  renderAll();
+});
 
 // ===============================
 // FILTERS
@@ -291,7 +291,6 @@ function applyFilters() {
   const srAte = ui.startRealAte.value ? new Date(ui.startRealAte.value + "T23:59:59") : null;
 
   filtered = rawData.filter((r) => {
-    // Suspensos: só mostra se checkbox estiver ligado
     if (!showSuspensos && isSuspenso(r.concluido)) return false;
 
     if (imp && r.implantador !== imp) return false;
@@ -346,7 +345,6 @@ function renderAll() {
   ui.kOpen.textContent = open;
   ui.kSupport.textContent = support;
 
-  // atrasadas (mantive sua lógica original)
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const late = filtered.filter((r) => {
@@ -386,7 +384,7 @@ function renderAll() {
     const emailIcon = isSim(r.email_enviado) ? "📧✅" : "📧⬜";
 
     const linkBtn = r.link_base
-      ? `<a href="${escapeHtml(r.link_base)}" target="_blank" title="${escapeHtml(r.link_base)}">🔗</a>`
+      ? `<a href="${escapeHtml(r.link_base)}" target="_blank" rel="noopener" title="${escapeHtml(r.link_base)}">🔗</a>`
       : "-";
 
     const passed = isSim(r.passado_suporte) ? "Sim" : (r.passado_suporte || "Não");
@@ -424,7 +422,7 @@ async function init() {
 
     ui.lastUpdate.textContent = `Atualizado: ${new Date().toLocaleString("pt-BR")}`;
 
-    // ✅ dropdown implantadores
+    // dropdown implantadores
     const imps = [...new Set(rawData.map(r => (r.implantador || "").trim()).filter(Boolean))]
       .sort((a, b) => a.localeCompare(b, "pt-BR", { sensitivity: "base" }));
 
@@ -432,11 +430,7 @@ async function init() {
       `<option value="">Todos</option>` +
       imps.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join("");
 
-    // aplica filtros iniciais
     applyFilters();
-
-    // bind sort (precisa existir depois do HTML estar carregado)
-    bindSortButtons();
   } catch (e) {
     ui.lastUpdate.textContent = "Erro ao carregar";
     setError(e.message || String(e));
@@ -453,7 +447,7 @@ function clearFilters() {
   ui.fSearch.value = "";
   ui.onlyNoStartReal.checked = false;
   ui.onlyTermoSim.checked = false;
-  ui.showSuspensos.checked = false; // padrão OFF
+  ui.showSuspensos.checked = false;
   applyFilters();
 }
 
