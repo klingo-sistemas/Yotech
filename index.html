@@ -125,7 +125,7 @@
       display:grid; grid-template-columns: 1fr 1fr; gap:8px;
     }
 
-    /* ✅ checkbox estilizado */
+    /* checkbox */
     .checkPill{
       display:flex; align-items:center; gap:10px;
       padding:10px 12px;
@@ -207,8 +207,8 @@
 
       <div class="actions">
         <span class="badge" id="lastUpdate">Carregando…</span>
-        <button class="btn primary" id="btnRefresh">↻ Atualizar</button>
-        <button class="btn" id="btnClear">Limpar filtros</button>
+        <button class="btn primary" id="btnRefresh" type="button">↻ Atualizar</button>
+        <button class="btn" id="btnClear" type="button">Limpar filtros</button>
         <a class="btn primary" href="./novo-cliente.html">+ Criar cliente</a>
       </div>
     </header>
@@ -221,14 +221,14 @@
       <div class="bd">
         <div class="filters">
           <div class="field">
-            <label>Implantador</label>
+            <label for="fImplantador">Implantador</label>
             <select id="fImplantador">
               <option value="">Todos</option>
             </select>
           </div>
 
           <div class="field">
-            <label>Status</label>
+            <label for="fStatus">Status</label>
             <select id="fStatus">
               <option value="">Todos</option>
               <option value="suporte">Passado para suporte</option>
@@ -255,7 +255,7 @@
           </div>
 
           <div class="field">
-            <label>Buscar (cliente)</label>
+            <label for="fSearch">Buscar (cliente)</label>
             <input id="fSearch" type="text" placeholder="Ex: HOSL, CDC…" />
           </div>
 
@@ -345,24 +345,25 @@
       <section class="panel">
         <div class="hd">
           <h2>Dashboard 3 • Linha do tempo</h2>
+          <small class="muted">Clique em ⇅ para ordenar</small>
         </div>
         <div class="bd" style="padding:0">
           <div style="overflow:auto">
             <table>
               <thead>
                 <tr>
-                  <th>Cliente <button class="sortBtn" data-key="cliente" title="Ordenar">⇅</button></th>
-                  <th>Implantador <button class="sortBtn" data-key="implantador" title="Ordenar">⇅</button></th>
-                  <th>Status <button class="sortBtn" data-key="status_label" title="Ordenar">⇅</button></th>
-                  <th>Data início <button class="sortBtn" data-key="data_inicio" title="Ordenar">⇅</button></th>
-                  <th>Previsão (Comercial) <button class="sortBtn" data-key="previsao_start" title="Ordenar">⇅</button></th>
-                  <th>Start Real <button class="sortBtn" data-key="start_real" title="Ordenar">⇅</button></th>
-                  <th>Termo <button class="sortBtn" data-key="termo_encerramento" title="Ordenar">⇅</button></th>
-                  <th>Passado p/ Suporte <button class="sortBtn" data-key="passado_suporte" title="Ordenar">⇅</button></th>
-                  <th>Comercial <button class="sortBtn" data-key="comercial" title="Ordenar">⇅</button></th>
-                  <th>Tam. <button class="sortBtn" data-key="tamanho_cliente" title="Ordenar">⇅</button></th>
-                  <th>Base <button class="sortBtn" data-key="link_base" title="Ordenar">⇅</button></th>
-                  <th>Email <button class="sortBtn" data-key="email_enviado" title="Ordenar">⇅</button></th>
+                  <th>Cliente <button class="sortBtn" type="button" data-key="cliente" title="Ordenar">⇅</button></th>
+                  <th>Implantador <button class="sortBtn" type="button" data-key="implantador" title="Ordenar">⇅</button></th>
+                  <th>Status <button class="sortBtn" type="button" data-key="status_label" title="Ordenar">⇅</button></th>
+                  <th>Data início <button class="sortBtn" type="button" data-key="data_inicio" title="Ordenar">⇅</button></th>
+                  <th>Previsão (Comercial) <button class="sortBtn" type="button" data-key="previsao_start" title="Ordenar">⇅</button></th>
+                  <th>Start Real <button class="sortBtn" type="button" data-key="start_real" title="Ordenar">⇅</button></th>
+                  <th>Termo <button class="sortBtn" type="button" data-key="termo_encerramento" title="Ordenar">⇅</button></th>
+                  <th>Passado p/ Suporte <button class="sortBtn" type="button" data-key="passado_suporte" title="Ordenar">⇅</button></th>
+                  <th>Comercial <button class="sortBtn" type="button" data-key="comercial" title="Ordenar">⇅</button></th>
+                  <th>Tam. <button class="sortBtn" type="button" data-key="tamanho_cliente" title="Ordenar">⇅</button></th>
+                  <th>Base <button class="sortBtn" type="button" data-key="link_base" title="Ordenar">⇅</button></th>
+                  <th>Email <button class="sortBtn" type="button" data-key="email_enviado" title="Ordenar">⇅</button></th>
                 </tr>
               </thead>
               <tbody id="tblBody"></tbody>
@@ -373,6 +374,7 @@
     </div>
   </div>
 
-  <script src="./app.js"></script>
+  <!-- ✅ defer garante que o DOM existe quando o JS rodar -->
+  <script defer src="./app.js?v=1"></script>
 </body>
 </html>
