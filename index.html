@@ -244,6 +244,8 @@
               <option value="suporte">Passado para suporte</option>
               <option value="concluido">Startados</option>
               <option value="andamento">Em andamento</option>
+              <!-- ✅ NOVO -->
+              <option value="suspenso">Suspenso</option>
             </select>
           </div>
 
@@ -273,8 +275,20 @@
               <label style="display:flex;align-items:center;gap:10px;margin:0">
                 <input type="checkbox" id="onlyNoStartReal" />
                 <span>Clique para visualizar clientes sem data de start</span>
+              </label>
             </div>
           </div>
+
+          <!-- ✅ NOVA FLAG (padrão desmarcada) -->
+          <div class="field">
+            <div class="checkPill">
+              <label style="display:flex;align-items:center;gap:10px;margin:0">
+                <input type="checkbox" id="showSuspensos" />
+                <span>Visualizar suspensos</span>
+              </label>
+            </div>
+          </div>
+
         </div>
       </div>
     </section>
@@ -346,7 +360,14 @@
                   <th>Data início <button class="sortBtn" data-key="data_inicio" title="Ordenar">⇅</button></th>
                   <th>Previsão (Comercial) <button class="sortBtn" data-key="previsao_start" title="Ordenar">⇅</button></th>
                   <th>Start Real <button class="sortBtn" data-key="start_real" title="Ordenar">⇅</button></th>
+
+                  <!-- ✅ NOVAS COLUNAS (Dash 3) -->
+                  <th>Termo <button class="sortBtn" data-key="termo_encerramento" title="Ordenar">⇅</button></th>
                   <th>Passado p/ Suporte <button class="sortBtn" data-key="passado_suporte" title="Ordenar">⇅</button></th>
+                  <th>Comercial <button class="sortBtn" data-key="comercial" title="Ordenar">⇅</button></th>
+                  <th>Tam. <button class="sortBtn" data-key="tamanho_cliente" title="Ordenar">⇅</button></th>
+                  <th>Base <button class="sortBtn" data-key="link_base" title="Ordenar">⇅</button></th>
+                  <th>Email <button class="sortBtn" data-key="email_enviado" title="Ordenar">⇅</button></th>
                 </tr>
               </thead>
               <tbody id="tblBody"></tbody>
@@ -360,7 +381,3 @@
   <script src="./app.js"></script>
 </body>
 </html>
-
-
-
-
