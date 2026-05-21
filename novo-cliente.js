@@ -4,6 +4,7 @@ const el = (id) => document.getElementById(id);
 
 const ui = {
   form: el("formCliente"),
+  btnSalvar: el("btnSalvar"),
   spin: el("spin"),
   msgOk: el("msgOk"),
   msgErr: el("msgErr"),
@@ -74,9 +75,13 @@ async function onSubmit(ev) {
 
   const data = collect();
 
+  // validações adicionais
   if (!data.cliente) return showErr("Informe o nome do cliente.");
   if (!data.implantador) return showErr("Selecione o implantador.");
+  if (!data.comercial) return showErr("Selecione um Comercial.");
+  if (!data.tamanho_cliente) return showErr("Selecione o Tamanho do Cliente.");
 
+  ui.btnSalvar.disabled = true;
   ui.spin.style.display = "inline";
 
   try {
@@ -88,14 +93,17 @@ async function onSubmit(ev) {
 
     showOk(`
       ✅ <b>Cliente criado com sucesso!</b><br>
-      📁 <a href="${resp.pasta_url}" target="_blank" style="color:#22c55e;font-weight:700;text-decoration:none">
+      📁 <a href="${resp.pasta_cliente_url}" target="_blank" style="color:#22c55e;font-weight:700;text-decoration:none">
         Abrir pasta no Drive
       </a><br>
       <span style="opacity:.85">Linha na planilha: ${resp.linha ?? "-"}</span>
     `);
+
+    ui.form.reset();
   } catch (err) {
     showErr(String(err.message || err));
   } finally {
+    ui.btnSalvar.disabled = false;
     ui.spin.style.display = "none";
   }
 }
