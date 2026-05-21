@@ -1,1 +1,126 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Yotech | Criar Cliente</title>
 
+  <style>
+    :root{
+      --bg:#0b1220;
+      --text:#e7eefc;
+      --muted:#9fb2d2;
+      --line:rgba(255,255,255,.08);
+      --brand:#22c55e;
+      --brand2:#06b6d4;
+      --bad:#fb7185;
+      --shadow: 0 12px 40px rgba(0,0,0,.35);
+      --radius: 18px;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;background: radial-gradient(1200px 600px at 20% -10%, rgba(34,197,94,.18), transparent 60%), radial-gradient(900px 500px at 90% 0%, rgba(6,182,212,.18), transparent 60%), var(--bg);color:var(--text);}
+    .wrap{max-width:760px;margin:0 auto;padding:22px 18px 40px}
+    header{display:flex;gap:14px;align-items:center;justify-content:space-between;padding:20px 18px;margin-bottom:16px;border:1px solid var(--line);border-radius:var(--radius);background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));box-shadow: var(--shadow);}
+    .brand{display:flex;align-items:center;gap:14px}
+    .logoImg{width:56px;height:56px;border-radius:999px;object-fit:cover;border:1px solid rgba(255,255,255,.14);box-shadow: 0 10px 30px rgba(6,182,212,.16);background: rgba(255,255,255,.04);}
+    .title h1{margin:0;font-size:16px}
+    .title p{margin:2px 0 0;color:var(--muted);font-size:12px}
+    .actions{display:flex;gap:10px;align-items:center}
+    .btn{cursor:pointer;border:1px solid var(--line);background: rgba(255,255,255,.03);color:var(--text);padding:10px 14px;border-radius:14px;font-weight:600;font-size:13px;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:.15s ease;}
+    .btn:hover{transform: translateY(-1px); background: rgba(255,255,255,.05)}
+    .btn.primary{border-color: rgba(34,197,94,.45); background: rgba(34,197,94,.14)}
+    .panel{border:1px solid var(--line);border-radius:var(--radius);background: linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.02));box-shadow: var(--shadow);overflow:hidden;}
+    .panel .hd{padding:14px 16px;border-bottom:1px solid var(--line)}
+    .panel .hd h2{margin:0;font-size:14px}
+    .panel .hd small{color:var(--muted)}
+    .panel .bd{padding:18px 16px}
+    .field{margin-bottom:14px}
+    .field label{display:block;font-size:12px;color:var(--muted);margin:0 0 6px}
+    input, select{width:100%;padding:12px 14px;border-radius:14px;border:1px solid var(--line);background: rgba(255,255,255,.03);color:var(--text);outline:none;color-scheme: dark;font-size:14px;}
+    input:focus, select:focus{border-color: rgba(6,182,212,.55);box-shadow: 0 0 0 3px rgba(6,182,212,.18);}
+    select option{background:#0f1b2e;color:#e7eefc}
+    .msg{display:none;margin-top:16px;padding:12px 14px;border-radius:14px;border:1px solid var(--line);background: rgba(255,255,255,.03);white-space:pre-wrap;font-size:13px;}
+    .msg.ok{border-color: rgba(34,197,94,.4); color:#c7f9dc}
+    .msg.err{border-color: rgba(251,113,133,.45); color:#ffd1d9}
+    .spin{display:none}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <img class="logoImg" src="./yotech.png" alt="YOtech" />
+        <div class="title"><h1>Criar Cliente</h1><p>Criação automática de pasta + cadastro</p></div>
+      </div>
+      <div class="actions">
+        <a class="btn" href="./index.html">← Voltar ao painel</a>
+      </div>
+    </header>
+
+    <section class="panel">
+      <div class="hd"><h2>Informações básicas</h2><small>Preencha apenas o essencial</small></div>
+      <div class="bd">
+        <form id="formCliente" autocomplete="off" onsubmit="return false;">
+          <div class="field">
+            <label>Nome do cliente</label>
+            <input id="cliente" required placeholder="Ex: HOSL, Clínica Singular…" />
+          </div>
+
+          <div class="field">
+            <label>Implantador</label>
+            <select id="implantador" required>
+              <option value="">Selecione…</option>
+              <option>Kauã</option>
+              <option>Enderson</option>
+              <option>Felipe</option>
+              <option>Enzo</option>
+              <option>João Paulo</option>
+              <option>Yan</option>
+              <option>Rodolfo</option>
+              <option>Roberto</option>
+              <option>Pedro</option>
+              <option>Guilherme</option>
+              <option>Yuri</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Comercial</label>
+            <select id="comercial" required>
+              <option value="">Selecione…</option>
+              <option>Fantini</option>
+              <option>Alex</option>
+              <option>Madaleno</option>
+              <option>Horacio</option>
+              <option>Marco</option>
+              <option>Edmilson</option>
+              <option>Gilberto</option>
+              <option>Kelsen</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Tamanho do cliente</label>
+            <select id="tamanho_cliente" required>
+              <option value="">Selecione…</option>
+              <option>P</option>
+              <option>M</option>
+              <option>G</option>
+              <option>GG</option>
+            </select>
+          </div>
+
+          <button type="button" class="btn primary" id="btnSalvar" style="margin-top:14px;width:100%">
+            Criar cliente <span class="spin" id="spin">⏳</span>
+          </button>
+
+          <div class="msg ok" id="msgOk"></div>
+          <div class="msg err" id="msgErr"></div>
+        </form>
+      </div>
+    </section>
+  </div>
+
+  <script src="./novo-cliente.js"></script>
+</body>
+</html>
