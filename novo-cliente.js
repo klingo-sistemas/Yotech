@@ -100,8 +100,8 @@ async function onSubmit(ev) {
   }
 }
 
-if (ui.form) {
-  ui.form.addEventListener("submit", onSubmit);
+if (ui.btnSalvar) {
+  ui.btnSalvar.addEventListener("click", onSubmit);
 } else {
-  console.error("formCliente não encontrado no HTML");
+  console.error("btnSalvar não encontrado no HTML");
 }
