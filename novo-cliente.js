@@ -1,4 +1,3 @@
-// AJUSTE: mesma URL do seu Apps Script
 const API_URL = "https://script.google.com/macros/s/AKfycbzLY6WE_XD26ql7phJ_b4VQ7pZLl-eJehG85x7gPZeOwLbqJpUYYthzvBA4x9mMqghu/exec";
 
 const el = (id) => document.getElementById(id);
@@ -10,6 +9,8 @@ const ui = {
   msgErr: el("msgErr"),
   cliente: el("cliente"),
   implantador: el("implantador"),
+  comercial: el("comercial"),
+  tamanho_cliente: el("tamanho_cliente"),
 };
 
 function showOk(html) {
@@ -27,7 +28,6 @@ function showErr(text) {
 }
 
 async function postJson(data) {
-  // tenta POST
   try {
     const res = await fetch(API_URL, {
       method: "POST",
@@ -36,10 +36,8 @@ async function postJson(data) {
     });
 
     const txt = await res.text();
-    const json = JSON.parse(txt);
-    return json;
+    return JSON.parse(txt);
   } catch (_) {
-    // fallback GET (evita CORS no GitHub Pages)
     const qs = new URLSearchParams();
     qs.set("action", "createClient");
     qs.set("payload", JSON.stringify(data));
@@ -56,7 +54,8 @@ function collect() {
     action: "createClient",
     cliente: (ui.cliente.value || "").trim(),
     implantador: (ui.implantador.value || "").trim(),
-    // padrões (já que você não preenche mais)
+    comercial: (ui.comercial.value || "").trim(),
+    tamanho_cliente: (ui.tamanho_cliente.value || "").trim(),
     concluido: "Não",
     data_inicio: "",
     previsao_start: "",
@@ -68,7 +67,7 @@ function collect() {
 }
 
 async function onSubmit(ev) {
-  ev.preventDefault(); // ✅ impede “reiniciar”
+  ev.preventDefault();
 
   ui.msgOk.style.display = "none";
   ui.msgErr.style.display = "none";
@@ -94,9 +93,6 @@ async function onSubmit(ev) {
       </a><br>
       <span style="opacity:.85">Linha na planilha: ${resp.linha ?? "-"}</span>
     `);
-
-    // opcional: limpar campos
-    // ui.form.reset();
   } catch (err) {
     showErr(String(err.message || err));
   } finally {
@@ -104,7 +100,6 @@ async function onSubmit(ev) {
   }
 }
 
-// ✅ garante que o form exista
 if (ui.form) {
   ui.form.addEventListener("submit", onSubmit);
 } else {
