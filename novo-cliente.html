@@ -98,7 +98,6 @@
 
 <body>
   <div class="wrap">
-
     <header>
       <div class="brand">
         <img class="logoImg" src="./yotech.png" alt="YOtech" />
@@ -119,12 +118,10 @@
       </div>
 
       <div class="bd">
-        <!-- IMPORTANTÍSSIMO: onsubmit retorna false pra bloquear reload -->
         <form id="formCliente" autocomplete="off" onsubmit="return false;">
           <div class="field">
             <label>Nome do cliente</label>
             <input id="cliente" required placeholder="Ex: HOSL, Clínica Singular…" />
-            <div class="help">Esse nome será usado na planilha e como nome da pasta no Drive.</div>
           </div>
 
           <div class="field">
@@ -140,10 +137,37 @@
               <option>Rodolfo</option>
               <option>Roberto</option>
               <option>Pedro</option>
+              <option>Guilherme</option>
+              <option>Yuri</option>
             </select>
           </div>
 
-          <!-- Botão agora é type="button" (NÃO submete form) -->
+          <div class="field">
+            <label>Comercial</label>
+            <select id="comercial">
+              <option value="">Selecione…</option>
+              <option>Fantini</option>
+              <option>Alex</option>
+              <option>Madaleno</option>
+              <option>Horacio</option>
+              <option>Marco</option>
+              <option>Edmilson</option>
+              <option>Gilberto</option>
+              <option>Kelsen</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Tamanho do cliente</label>
+            <select id="tamanho_cliente">
+              <option value="">Selecione…</option>
+              <option>P</option>
+              <option>M</option>
+              <option>G</option>
+              <option>GG</option>
+            </select>
+          </div>
+
           <button type="button" class="btn primary" id="btnSalvar" style="margin-top:14px;width:100%">
             Criar cliente <span class="spin" id="spin">⏳</span>
           </button>
@@ -153,114 +177,8 @@
         </form>
       </div>
     </section>
-
   </div>
 
-  <script>
-    // ===============================
-    // CONFIG
-    // ===============================
-    const API_URL = "https://script.google.com/macros/s/AKfycbzLY6WE_XD26ql7phJ_b4VQ7pZLl-eJehG85x7gPZeOwLbqJpUYYthzvBA4x9mMqghu/exec";
-
-    const el = (id) => document.getElementById(id);
-
-    const ui = {
-      form: el("formCliente"),
-      btnSalvar: el("btnSalvar"),
-      spin: el("spin"),
-      msgOk: el("msgOk"),
-      msgErr: el("msgErr"),
-      cliente: el("cliente"),
-      implantador: el("implantador"),
-    };
-
-    function showOk(html) {
-      ui.msgErr.style.display = "none";
-      ui.msgErr.textContent = "";
-      ui.msgOk.style.display = "block";
-      ui.msgOk.innerHTML = html;
-    }
-
-    function showErr(text) {
-      ui.msgOk.style.display = "none";
-      ui.msgOk.textContent = "";
-      ui.msgErr.style.display = "block";
-      ui.msgErr.textContent = text;
-    }
-
-    async function callApiCreateClient(data) {
-      // tenta POST
-      try {
-        const res = await fetch(API_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data),
-        });
-        const txt = await res.text();
-        return JSON.parse(txt);
-      } catch (e) {
-        // fallback GET
-        const qs = new URLSearchParams();
-        qs.set("action", "createClient");
-        qs.set("payload", JSON.stringify(data));
-        const url = API_URL + "?" + qs.toString();
-
-        const res = await fetch(url);
-        if (!res.ok) throw new Error("Falha ao chamar API (fallback GET).");
-        return await res.json();
-      }
-    }
-
-    function collect() {
-      return {
-        action: "createClient",
-        cliente: (ui.cliente.value || "").trim(),
-        implantador: (ui.implantador.value || "").trim(),
-        // defaults
-        concluido: "Não",
-        data_inicio: "",
-        previsao_start: "",
-        start_real: "",
-        passado_suporte: "",
-        data_passagem_suporte: "",
-        obs: "",
-      };
-    }
-
-    async function onSave() {
-      ui.msgOk.style.display = "none";
-      ui.msgErr.style.display = "none";
-
-      const data = collect();
-      if (!data.cliente) return showErr("Informe o nome do cliente.");
-      if (!data.implantador) return showErr("Selecione o implantador.");
-
-      ui.btnSalvar.disabled = true;
-      ui.spin.style.display = "inline";
-
-      try {
-        const resp = await callApiCreateClient(data);
-        if (!resp || resp.ok !== true) throw new Error(resp?.error || "Erro ao criar cliente.");
-
-        showOk(`
-          ✅ <b>Cliente criado com sucesso!</b><br>
-          📁 <a href="${resp.pasta_url}" target="_blank" style="color:#22c55e;font-weight:800;text-decoration:none">
-            Abrir pasta no Drive
-          </a><br>
-          <span style="opacity:.85">Linha na planilha: ${resp.linha ?? "-"}</span>
-        `);
-
-        // opcional: limpar
-        // ui.form.reset();
-      } catch (err) {
-        showErr(String(err.message || err));
-      } finally {
-        ui.btnSalvar.disabled = false;
-        ui.spin.style.display = "none";
-      }
-    }
-
-    ui.btnSalvar.addEventListener("click", onSave);
-  </script>
+  <script src="./novo-cliente.js"></script>
 </body>
 </html>
